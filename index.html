@@ -35,7 +35,7 @@
             <div style="display:flex;gap:10px;margin-bottom:8px;">
                 <div style="flex:2;"><select id="p-pilih" class="form-control" onchange="cekHarga()" required></select></div>
                 <div style="flex:1;"><input type="number" id="p-qty" class="form-control" min="1" value="1"></div>
-                <div style="flex:1;"><button type="submit" class="btn btn-primary" style="padding:8px;">Jual</button></div>
+                <div style="flex:1;"><button type="submit" id="btn-jual" class="btn btn-primary" style="padding:8px;">Jual</button></div>
             </div>
         </form>
         <div style="font-size:12px;font-weight:bold;color:#1e40af;">Stok Gudang: <span id="t-stok" class="badge" style="background:#f59e0b;color:#000;">0</span> | Harga Jual: <span id="t-harga" class="badge" style="background:#f3f4f6;color:#1e3a8a;">Rp0</span></div>
@@ -70,7 +70,7 @@
 
 <script>
     // KUNCI AKSES UTK DATABASES SUPABASE KEDAI ARFAAZ
-    const SUPABASE_URL = "https://mubhbbiiauzbqnnrawbd.supabase.co";
+    const SUPABASE_URL = "https://supabase.co";
     const SUPABASE_KEY = "sb_publishable_vs-g2Pd_IFL5X8PVrApqTw_KdQTTAj0";
     
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -78,6 +78,7 @@
     let listProduk = [];
 
     window.onload = function() { 
+        // PERBAIKAN: .split('T')[0] untuk mengambil format tanggal YYYY-MM-DD string bersih
         document.getElementById('filter-tanggal').value = new Date().toISOString().split('T')[0]; 
         ambilSemuaData();
         aktifkanSistemRealtime();
@@ -90,7 +91,11 @@
             .select('*')
             .order('created_at', { ascending: false });
 
-        if (!errProd) listProduk = dataProd || [];
+        if (!errProd) {
+            listProduk = dataProd || [];
+        } else {
+            console.error("Gagal ambil produk:", errProd.message);
+        }
 
         refreshTampilan();
     }
@@ -140,6 +145,12 @@
     // SIMPAN PRODUK BARU KE CLOUD
     async function saveBarang(e) {
         e.preventDefault(); 
+        const btnSave = document.getElementById('btn-save');
+        
+        // Ubah tombol jadi loading
+        btnSave.innerText = "Menyimpan...";
+        btnSave.disabled = true;
+
         const nama = document.getElementById('i-nama').value; 
         const modal = parseInt(document.getElementById('i-modal').value); 
         const harga = parseInt(document.getElementById('i-harga').value); 
@@ -148,6 +159,10 @@
         const { error } = await supabaseClient
             .from('produk')
             .insert([{ nama_barang: nama, harga_modal: modal, harga_jual: harga, stok: dtStok }]);
+
+        // Kembalikan status tombol setelah proses selesai
+        btnSave.innerText = "Simpan Masuk Gudang";
+        btnSave.disabled = false;
 
         if (error) {
             alert("Gagal simpan barang: " + error.message);
@@ -161,7 +176,7 @@
     async function hapusBarang(id) { 
         if(confirm("Hapus barang?")) { 
             const { error } = await supabaseClient.from('produk').delete().eq('id', id);
-            if (error) alert("Gagal menghapus data.");
+            if (error) alert("Gagal menghapus data: " + error.message);
             else ambilSemuaData();
         } 
     }
@@ -172,18 +187,3 @@
         document.getElementById('t-stok').innerText = p ? p.stok : 0; 
         document.getElementById('t-harga').innerText = p ? "Rp" + parseInt(p.harga_jual).toLocaleString('id-ID') : "Rp0"; 
     }
-
-    // PROSES TRANSAKSI KASIR JUAL & PENGURANGAN STOK OTOMATIS
-    async function keKeranjang(e) {
-        e.preventDefault(); 
-        const id = document.getElementById('p-pilih').value; 
-        const qty = parseInt(document.getElementById('p-qty').value);
-        
-        if(!id) return alert("Pilih produk dulu!");
-
-        const p = listProduk.find(x => x.id.toString() === id.toString());
-        if(!p) return;
-
-        if(p.stok < qty) return alert("Stok gudang tidak mencukupi!");
-
-        const labaSatuBarang = p.harga_jual - p.harga_modal;
