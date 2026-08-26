@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Kasir Grosir Sederhana</title>
+    <!-- Menggunakan Bootstrap 5 untuk tampilan responsif -->
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .table-responsive { max-height: 400px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+
+<div class="container py-4">
+    <h2 class="text-center mb-4">🏪 Sistem Kasir Toko Grosir</h2>
+    
+    <div class="row g-3">
+        <!-- Bagian Kiri: Input Produk -->
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white font-weight-bold">Input Barang</div>
+                <div class="card-body">
+                    <form id="form-kasir" onsubmit="tambahKeKeranjang(event)">
+                        <div class="mb-3">
+                            <label class="form-label">Pilih Produk Grosir</label>
+                            <select id="pilih-produk" class="form-select" onchange="updateInfoHarga()" required>
+                                <option value="" disabled selected>-- Pilih Barang --</option>
+                                <option value="P001" data-nama="Minyak Goreng 2L (Dus)" data-harga="165000">Minyak Goreng 2L (Dus) - Rp165.000</option>
+                                <option value="P002" data-nama="Mie Instan (Dus)" data-harga="115000">Mie Instan (Dus) - Rp115.000</option>
+                                <option value="P003" data-nama="Gula Pasir 10kg" data-harga="140000">Gula Pasir 10kg - Rp140.000</option>
+                                <option value="P004" data-nama="Beras Ramos 50kg" data-harga="620000">Beras Ramos 50kg - Rp620.000</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Harga Satuan Grosir</label>
+                            <input type="text" id="harga-satuan" class="form-control" readonly value="Rp0">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Jumlah Pembelian (Qty)</label>
+                            <input type="number" id="jumlah-beli" class="form-control" min="1" value="1" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Tambah ke Keranjang</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bagian Kanan: Daftar Keranjang & Pembayaran -->
+        <div class="col-md-7">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-secondary text-white font-weight-bold">Daftar Belanjaan</div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Nama Barang</th>
+                                    <th>Harga</th>
+                                    <th>Qty</th>
+                                    <th>Subtotal</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabel-keranjang">
+                                <!-- Data diisi oleh JavaScript -->
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">Belum ada barang di keranjang</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Harga & Hitung Kembalian -->
+            <div class="card shadow-sm">
+                <div class="card-body bg-light">
+                    <div class="d-flex justify-content-between mb-2">
+                        <h4>Total Belanja:</h4>
+                        <h4 class="text-danger" id="total-belanja">Rp0</h4>
+                    </div>
+                    <hr>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label">Uang Tunai Pembeli</label>
+                            <input type="number" id="uang-bayar" class="form-control" placeholder="Masukkan nominal" oninput="hitungKembalian()">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Uang Kembali</label>
+                            <input type="text" id="uang-kembali" class="form-control fw-bold text-success" readonly value="Rp0">
+                        </div>
+                    </div>
+                    <button class="btn btn-danger btn-sm mt-3" onclick="resetKasir()">Kosongkan Keranjang</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Logika JavaScript untuk simulasi Kasir -->
+<script>
+    let keranjang = [];
+    let totalBelanja = 0;
+
+    // Memperbarui input harga otomatis saat produk dipilih
+    function updateInfoHarga() {
+        const select = document.getElementById('pilih-produk');
+        const produkDipilih = select.options[select.selectedIndex];
+        const harga = produkDipilih.getAttribute('data-harga');
+        
+        document.getElementById('harga-satuan').value = "Rp" + parseInt(harga).toLocaleString('id-ID');
+    }
+
+    // Memasukkan barang ke dalam array keranjang
+    function tambahKeKeranjang(event) {
+        event.preventDefault();
+        
+        const select = document.getElementById('pilih-produk');
+        const kode = select.value;
+        const nama = select.options[select.selectedIndex].getAttribute('data-nama');
+        const harga = parseInt(select.options[select.selectedIndex].getAttribute('data-harga'));
+        const qty = parseInt(document.getElementById('jumlah-beli').value);
+        
+        // Periksa apakah barang sudah ada di keranjang
+        const indeksProduk = keranjang.findIndex(item => item.kode === kode);
+        
+        if (indeksProduk > -1) {
+            // Jika sudah ada, tinggal tambahkan jumlahnya
+            keranjang[indeksProduk].qty += qty;
+            keranjang[indeksProduk].subtotal = keranjang[indeksProduk].qty * harga;
+        } else {
+            // Jika belum ada, masukkan item baru
+            keranjang.push({
+                kode: kode,
+                nama: nama,
+                harga: harga,
+                qty: qty,
+                subtotal: harga * qty
+            });
+        }
+        
+        renderKeranjang();
+        document.getElementById('form-kasir').reset();
+        document.getElementById('harga-satuan').value = "Rp0";
+    }
+
+    // Menampilkan daftar keranjang ke dalam tabel HTML
+    function renderKeranjang() {
+        const tabel = document.getElementById('tabel-keranjang');
+        tabel.innerHTML = '';
+        totalBelanja = 0;
+
+        if (keranjang.length === 0) {
+            tabel.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Belum ada barang di keranjang</td></tr>`;
+            document.getElementById('total-belanja').innerText = "Rp0";
+            document.getElementById('uang-kembali').value = "Rp0";
+            return;
+        }
+
+        keranjang.forEach((item, index) => {
+            totalBelanja += item.subtotal;
+            tabel.innerHTML += `
+                <tr>
+                    <td>${item.nama}</td>
+                    <td>Rp${item.harga.toLocaleString('id-ID')}</td>
+                    <td>${item.qty}</td>
+                    <td>Rp${item.subtotal.toLocaleString('id-ID')}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="hapusItem(${index})">❌</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        document.getElementById('total-belanja').innerText = "Rp" + totalBelanja.toLocaleString('id-ID');
+        hitungKembalian();
+    }
+
+    // Menghapus satu item dari tabel belanjaan
+    function hapusItem(index) {
+        keranjang.splice(index, 1);
+        renderKeranjang();
+    }
+
+    // Menghitung uang kembalian pembeli secara realtime
+    function hitungKembalian() {
+        const uangBayar = parseInt(document.getElementById('uang-bayar').value) || 0;
+        const inputKembali = document.getElementById('uang-kembali');
+
+        if (uangBayar >= totalBelanja) {
+            const kembali = uangBayar - totalBelanja;
+            inputKembali.value = "Rp" + kembali.toLocaleString('id-ID');
+            inputKembali.className = "form-control fw-bold text-success";
+        } else {
+            inputKembali.value = "Uang Kurang";
+            inputKembali.className = "form-control fw-bold text-danger";
+        }
+    }
+
+    // Mereset ulang seluruh transaksi kasir
+    function resetKasir() {
+        if(confirm("Apakah Anda yakin ingin mengosongkan keranjang belanja?")) {
+            keranjang = [];
+            document.getElementById('uang-bayar').value = '';
+            renderKeranjang();
+        }
+    }
+</script>
+
+</body>
+</html>
