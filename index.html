@@ -3,91 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Sembako Mandiri</title>
+    <title>Kasir Cloud Kedai Arfaaz</title>
     <link href="https://jsdelivr.net" rel="stylesheet">
-    <style>body{background:#f3f4f6;padding:10px;} .card{margin-bottom:15px;}</style>
+    <style>body{background:#f3f4f6;padding:10px;} .card{margin-bottom:15px; border-radius:10px; border:none;} .logo-toko{width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #3b82f6;box-shadow:0 4px 6px rgba(0,0,0,0.1);}</style>
 </head>
 <body>
 <div class="container-fluid">
-    <h3 class="text-center text-primary my-3">🏪 KEDAI ARFAAZ</h3>
+    <div class="text-center my-3">
+        <img src="logo.png" class="logo-toko mb-2" alt="Logo Toko" onerror="this.src='https://unsplash.com'">
+        <h3 class="fw-bold text-primary m-0">🏪 KEDAI ARFAAZ</h3>
+        <p class="text-muted small">Sistem Kasir & Stok Multi-User Cloud</p>
+    </div>
     <div class="row">
+        <!-- FORM BARANG -->
         <div class="col-md-4">
             <div class="card p-3 shadow-sm">
-                <h5>⚙️ Input / Edit Produk</h5>
+                <h5 class="fw-bold text-secondary">⚙️ Input / Edit Produk</h5>
                 <form id="f-produk" onsubmit="saveBarang(event)">
                     <input type="hidden" id="e-id">
-                    <div class="mb-2"><label>Nama Barang</label><input type="text" id="i-nama" class="form-control form-control-sm" required></div>
-                    <div class="mb-2"><label>Harga Modal</label><input type="number" id="i-modal" class="form-control form-control-sm" required></div>
-                    <div class="mb-2"><label>Harga Jual</label><input type="number" id="i-harga" class="form-control form-control-sm" required></div>
-                    <div class="mb-2"><label>Jumlah Stok</label><input type="number" id="i-stok" class="form-control form-control-sm" required></div>
-                    <button type="submit" class="btn btn-success btn-sm w-100" id="btn-save">Simpan Barang</button>
-                    <button type="button" class="btn btn-secondary btn-sm w-100 mt-1 d-none" id="btn-batal" onclick="batal()">Batal</button>
+                    <div class="mb-2"><label class="small fw-semibold">Nama Barang</label><input type="text" id="i-nama" class="form-control form-control-sm" required></div>
+                    <div class="mb-2"><label class="small fw-semibold">Harga Modal</label><input type="number" id="i-modal" class="form-control Rely-sm" required></div>
+                    <div class="mb-2"><label class="small fw-semibold">Harga Jual</label><input type="number" id="i-harga" class="form-control form-control-sm" required></div>
+                    <div class="mb-2"><label class="small fw-semibold">Jumlah Stok</label><input type="number" id="i-stok" class="form-control form-control-sm" required></div>
+                    <button type="submit" class="btn btn-success btn-sm w-100 fw-bold" id="btn-save">Simpan Barang</button>
+                    <button type="button" class="btn btn-secondary btn-sm w-100 mt-1 d-none fw-bold" id="btn-batal" onclick="batal()">Batal</button>
                 </form>
             </div>
-            <div class="card p-3 shadow-sm bg-light">
-                <h6>📊 Ringkasan Keuntungan</h6>
-                <div>Laba Bersih: <strong class="text-success" id="l-laba">Rp0</strong></div>
-                <button class="btn btn-danger btn-sm w-100 mt-2" onclick="resetSemua()">⚠️ Kosongkan Semua Data</button>
+            <div class="card p-3 shadow-sm bg-white border-start border-success border-4">
+                <h6 class="fw-bold text-success">📊 Ringkasan Keuntungan Real-time</h6>
+                <div class="fs-5">Laba Bersih: <strong class="text-success" id="l-laba">Rp0</strong></div>
             </div>
         </div>
+        <!-- KASIR & GUDANG -->
         <div class="col-md-8">
             <div class="card p-3 shadow-sm bg-primary text-white">
-                <h5>🛒 Transaksi Baru</h5>
+                <h5 class="fw-bold">🛒 Transaksi Baru (Semua HP Sinkron)</h5>
                 <form onsubmit="keKeranjang(event)" class="row g-2">
                     <div class="col-6"><select id="p-pilih" class="form-select form-select-sm" onchange="cekHarga()" required></select></div>
                     <div class="col-3"><input type="number" id="p-qty" class="form-control form-control-sm" min="1" value="1" placeholder="Qty"></div>
-                    <div class="col-3"><button type="submit" class="btn btn-light btn-sm w-100">Tambah</button></div>
+                    <div class="col-3"><button type="submit" class="btn btn-light btn-sm w-100 fw-bold text-primary">Jual</button></div>
                 </form>
-                <div class="mt-2 small">Stok: <span id="t-stok">0</span> | Harga: <span id="t-harga">Rp0</span></div>
+                <div class="mt-2 small fw-semibold">Stok Gudang: <span id="t-stok" class="badge bg-warning text-dark">0</span> | Harga Jual: <span id="t-harga" class="badge bg-light text-primary">Rp0</span></div>
             </div>
             <div class="card p-3 shadow-sm">
-                <h6>Daftar Belanja & Stok Gudang</h6>
-                <table class="table table-sm table-striped">
-                    <thead><tr><th>Nama</th><th>Stok</th><th>Harga</th><th>Aksi</th></tr></thead>
-                    <tbody id="t-gudang"></tbody>
-                </table>
+                <h6 class="fw-bold text-secondary">📋 Daftar Belanja & Stok Gudang Pusat</h6>
+                <div class="table-responsive"><table class="table table-sm table-striped align-middle"><thead class="table-light"><tr><th>Nama</th><th>Stok</th><th>Harga</th><th>Aksi</th></tr></thead><tbody id="t-gudang"></tbody></table></div>
             </div>
         </div>
     </div>
 </div>
+<!-- AREA STRUK NOTA -->
+<div id="area-cetak-struk" class="d-none" style="max-width:320px; margin:30px auto; padding:15px; background:white; border:1px dashed black; font-family:monospace; font-size:13px;">
+    <div style="text-align:center; margin-bottom:10px;"><h3 style="margin:0;">🏪 KEDAI ARFAAZ</h3><p style="margin:5px 0;">Terima Kasih Telah Berbelanja!<br><span id="struk-waktu"></span></p></div>
+    <div style="border-top:1px dashed black; margin:10px 0;"></div><div id="struk-items"></div><div style="border-top:1px dashed black; margin:10px 0;"></div>
+    <div class="flex-box" style="display:flex; justify-content:space-between;"><span>TOTAL LABA:</span><span id="struk-total" style="font-weight:bold;"></span></div>
+    <div style="border-top:1px dashed black; margin:10px 0;"></div>
+    <div class="no-print" style="margin-top:15px;"><button class="btn btn-success w-100" onclick="tutupStruk()">✨ Mulai Transaksi Baru</button></div>
+</div>
 <script>
-    let produk = JSON.parse(localStorage.getItem('k_prod')) || [];
-    let riwayat = JSON.parse(localStorage.getItem('k_riw')) || 0;
-    function refresh(){
-        localStorage.setItem('k_prod', JSON.stringify(produk)); localStorage.setItem('k_riw', riwayat);
-        const sel = document.getElementById('p-pilih'); sel.innerHTML = '<option value="">-- Pilih --</option>';
-        const tb = document.getElementById('t-gudang'); tb.innerHTML = '';
-        produk.forEach(p => {
-            sel.innerHTML += `<option value="${p.id}">${p.nama}</option>`;
-            tb.innerHTML += `<tr><td>${p.nama}</td><td><strong>${p.stok}</strong></td><td>Rp${p.harga.toLocaleString()}</td><td><button class="btn btn-warning btn-xs py-0 px-1" onclick="edit('${p.id}')">✏️</button> <button class="btn btn-danger btn-xs py-0 px-1" onclick="hapus('${p.id}')">🗑️</button></td></tr>`;
-        });
-        document.getElementById('l-laba').innerText = "Rp" + riwayat.toLocaleString(); cekHarga();
+    // Memasukkan rekening data cloud pusat Kedai Arfaaz
+    const sUrl = "https://supabase.co";
+    const sKey = "sb_publishable_vs-g2Pd_IFL5X8PVrApqTw_KdQTTAj0";
+    const headers = { "apikey": sKey, "Authorization": "Bearer " + sKey, "Content-Type": "application/json", "Prefer": "return=representation" };
+    let produk = []; let riwayat = parseInt(localStorage.getItem('k_riw_cloud')) || 0;
+    async function loadData() {
+        try {
+            const r = await fetch(sUrl + "?order=nama.asc", { headers }); produk = await r.json();
+            const sel = document.getElementById('p-pilih'); sel.innerHTML = '<option value="">-- Pilih Produk --</option>';
+            const tb = document.getElementById('t-gudang'); tb.innerHTML = '';
+            produk.forEach(p => {
+                sel.innerHTML += `<option value="${p.id}">${p.nama}</option>`;
+                tb.innerHTML += `<tr><td><strong>${p.nama}</strong></td><td><span class="badge ${p.stok<=5?'bg-danger':'bg-secondary'}">${p.stok} Pcs</span></td><td>Rp${parseInt(p.harga).toLocaleString()}</td><td><button class="btn btn-warning btn-sm py-0 px-1" onclick="edit('${p.id}')">✏️</button> <button class="btn btn-danger btn-sm py-0 px-1" onclick="hapus('${p.id}')">🗑️</button></td></tr>`;
+            });
+            document.getElementById('l-laba').innerText = "Rp" + riwayat.toLocaleString('id-ID'); cekHarga();
+        } catch(e) { console.error("Koneksi cloud bermasalah"); }
     }
-    function saveBarang(e){
-        e.preventDefault(); const id = document.getElementById('e-id').value; const nama = document.getElementById('i-nama').value; const modal = parseInt(document.getElementById('i-modal').value); const harga = parseInt(document.getElementById('i-harga').value); const stok = parseInt(document.getElementById('i-stok').value);
-        if(id){ const idx = produk.findIndex(p=>p.id===id); produk[idx]={id,nama,modal,harga,stok}; batal(); }
-        else{ produk.push({id:Date.now().toString(),nama,modal,harga,stok}); }
-        document.getElementById('f-produk').reset(); refresh();
+    async function saveBarang(e) {
+        e.preventDefault(); const id = document.getElementById('e-id').value; const nama = document.getElementById('i-nama').value; const modal = parseInt(document.getElementById('i-modal').value); const harga = document.getElementById('i-harga').value; const stok = parseInt(document.getElementById('i-stok').value);
+        const data = { id: id || Date.now().toString(), nama, modal, harga, stok };
+        if(id) { await fetch(`${sUrl}?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify(data) }); batal(); }
+        else { await fetch(sUrl, { method: "POST", headers, body: JSON.stringify(data) }); }
+        document.getElementById('f-produk').reset(); loadData();
     }
-    function edit(id){
-        const p = produk.find(x=>x.id===id); if(!p) return;
-        document.getElementById('e-id').value=p.id; document.getElementById('i-nama').value=p.nama; document.getElementById('i-modal').value=p.modal; document.getElementById('i-harga').value=p.harga; document.getElementById('i-stok').value=p.stok;
-        document.getElementById('btn-save').innerText="Simpan Perubahan"; document.getElementById('btn-batal').classList.remove('d-none');
+    function edit(id) {
+        const p = produk.find(x => x.id === id); if(!p) return;
+        document.getElementById('e-id').value = p.id; document.getElementById('i-nama').value = p.nama; document.getElementById('i-modal').value = p.modal; document.getElementById('i-harga').value = p.harga; document.getElementById('i-stok').value = p.stok;
+        document.getElementById('btn-save').innerText = "Simpan Perubahan"; document.getElementById('btn-batal').classList.remove('d-none');
     }
-    function batal(){ document.getElementById('e-id').value=''; document.getElementById('f-produk').reset(); document.getElementById('btn-save').innerText="Simpan Barang"; document.getElementById('btn-batal').classList.add('d-none'); }
-    function hapus(id){ if(confirm("Hapus?")){ produk=produk.filter(p=>p.id!==id); refresh(); } }
-    function cekHarga(){
-        const id = document.getElementById('p-pilih').value; const p = produk.find(x=>x.id===id);
-        document.getElementById('t-stok').innerText = p ? p.stok : 0; document.getElementById('t-harga').innerText = p ? "Rp"+p.harga.toLocaleString() : "Rp0";
+    function batal() { document.getElementById('e-id').value = ''; document.getElementById('f-produk').reset(); document.getElementById('btn-save').innerText = "Simpan Barang"; document.getElementById('btn-batal').classList.add('d-none'); }
+    async function hapus(id) { if(confirm("Hapus barang dari cloud?")) { await fetch(`${sUrl}?id=eq.${id}`, { method: "DELETE", headers }); loadData(); } }
+    function cekHarga() {
+        const id = document.getElementById('p-pilih').value; const p = produk.find(x => x.id === id);
+        document.getElementById('t-stok').innerText = p ? p.stok : 0; document.getElementById('t-harga').innerText = p ? "Rp" + parseInt(p.harga).toLocaleString() : "Rp0";
     }
-    function keKeranjang(e){
-        e.preventDefault(); const id = document.getElementById('p-pilih').value; const qty = parseInt(document.getElementById('p-qty').value); const p = produk.find(x=>x.id===id);
-        if(!p || qty > p.stok){ alert("Stok Kurang!"); return; }
-        p.stok -= qty; riwayat += (p.harga - p.modal) * qty; alert("💸 Transaksi Berhasil! Laba Otomatis Tercatat.");
-        document.getElementById('p-qty').value = 1; refresh();
+    async function keKeranjang(e) {
+        e.preventDefault(); const id = document.getElementById('p-pilih').value; const qty = parseInt(document.getElementById('p-qty').value); const p = produk.find(x => x.id === id);
+        if(!p || qty > p.stok) { alert("Stok di Gudang Pusat Kurang!"); return; }
+        const sisaStok = p.stok - qty; const untung = (parseInt(p.harga) - p.modal) * qty; riwayat += untung; localStorage.setItem('k_riw_cloud', riwayat);
+        await fetch(`${sUrl}?id=eq.${id}`, { method: "PATCH", headers, body: JSON.stringify({ stok: sisaStok }) });
+        alert(`💸 Transaksi Berhasil!\nStok terpotong di cloud.\nKeuntungan +Rp${untung.toLocaleString()} tercatat.`);
+        document.getElementById('p-qty').value = 1; loadData();
     }
-    function resetSemua(){ if(confirm("Hapus Semua Data?")){ localStorage.clear(); produk=[]; riwayat=0; refresh(); } }
-    window.onload = refresh;
+    window.onload = loadData;
 </script>
 </body>
 </html>
