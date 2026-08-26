@@ -8,7 +8,10 @@
     <style>
         body { background-color: #f8f9fa; }
         .table-responsive { max-height: 300px; overflow-y: auto; }
-        .nav-tabs .nav-link { font-weight: bold; }
+        /* Style kustom untuk navigasi tab mandiri */
+        .tab-kustom { display: none; }
+        .tab-kustom.aktif { display: block; }
+        .nav-link { cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -16,23 +19,23 @@
 <div class="container py-4">
     <h2 class="text-center mb-4">🏪 Kasir, Stok & Keuntungan Grosir</h2>
 
-    <!-- Menu Navigasi Halaman -->
-    <ul class="nav nav-tabs mb-4" id="menuTab" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active text-primary" id="kasir-tab" data-bs-toggle="tab" data-bs-target="#halaman-kasir" type="button" role="tab">🛒 Menu Kasir</button>
+    <!-- Menu Navigasi Halaman Mandiri -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link active" id="btn-tab-kasir" onclick="pindahHalaman('halaman-kasir')">🛒 Menu Kasir</a>
         </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link text-success" id="admin-tab" data-bs-toggle="tab" data-bs-target="#halaman-admin" type="button" role="tab">⚙️ Atur Barang & Stok</button>
+        <li class="nav-item">
+            <a class="nav-link text-success" id="btn-tab-admin" onclick="pindahHalaman('halaman-admin')">⚙️ Atur Barang & Stok</a>
         </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link text-danger" id="laporan-tab" data-bs-toggle="tab" data-bs-target="#halaman-laporan" type="button" role="tab">📊 Laporan Keuntungan</button>
+        <li class="nav-item">
+            <a class="nav-link text-danger" id="btn-tab-laporan" onclick="pindahHalaman('halaman-laporan')">📊 Laporan Keuntungan</a>
         </li>
     </ul>
 
-    <div class="tab-content" id="isiTab">
+    <div>
         
         <!-- ================= HALAMAN KASIR ================= -->
-        <div class="tab-pane fade show active" id="halaman-kasir" role="tabpanel">
+        <div id="halaman-kasir" class="tab-kustom aktif">
             <div class="row g-3">
                 <div class="col-md-5">
                     <div class="card shadow-sm">
@@ -111,7 +114,7 @@
         </div>
 
         <!-- ================= HALAMAN ADMIN (MANAJEMEN BARANG) ================= -->
-        <div class="tab-pane fade" id="halaman-admin" role="tabpanel">
+        <div id="halaman-admin" class="tab-kustom">
             <div class="row g-3">
                 <div class="col-md-4">
                     <div class="card shadow-sm">
@@ -167,10 +170,13 @@
         </div>
 
         <!-- ================= HALAMAN LAPORAN KEUANGAN ================= -->
-        <div class="tab-pane fade" id="halaman-laporan" role="tabpanel">
+        <div id="halaman-laporan" class="tab-kustom">
             <div class="row g-3 mb-4">
                 <div class="col-md-4">
                     <div class="card bg-primary text-white text-center p-3 shadow-sm">
-                        <h5>💰 Total Omset Pen penjualan</h5>
+                        <h5>💰 Total Omset Penjualan</h5>
                         <h3 id="lap-omset">Rp0</h3>
                     </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-secondary text-white text-center p-3 shadow-sm">
