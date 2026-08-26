@@ -22,7 +22,7 @@
         .btn-success { background: #10b981; color: white; }
         .btn-primary { background: #3b82f6; color: white; }
         .btn-danger { background: #ef4444; color: white; }
-        .btn-warning { background: #f59e0b; color: white; width: auto; padding: 4px 8px; font-size: 12px; }
+        .btn-warning { background: #f59e0b; color: white; width: auto; padding: 4px 8px; font-size: 12px; border-radius: 4px; }
         .btn-sm-danger { background: #ef4444; color: white; width: auto; padding: 4px 8px; font-size: 12px; border-radius: 4px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
         th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
@@ -112,9 +112,7 @@
     <div class="no-print" style="margin-top:15px;"><button class="btn btn-primary" onclick="window.print()" style="margin-bottom:5px;">🖨️ Cetak / Simpan Ke PDF</button><button class="btn btn-success" onclick="tutupStruk()">✨ Mulai Transaksi Baru</button></div>
 </div>
 
-<script>
-    const produkAwal = [
-        { id: "1", nama: "Minyak Goreng 2L (Dus)", modal: 145000, harga: 165000, stok: 20 },
-        { id: "2", nama: "Mie Instan (Dus)", modal: 100000, harga: 115000, stok: 45 },
-        { id: "3", nama: "Gula Pasir 10kg", modal: 120000, harga: 140000, stok: 15 }
-    ];
+<!-- MEMANGGIL MESIN HITUNG DARI CLOUD AMAN AGAR TIDAK TERPOTONG iPHONE -->
+<script src="kasir-inti.js"><script>
+</body>
+</html>
