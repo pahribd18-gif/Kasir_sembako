@@ -3,116 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Sembako Grosir</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #f3f4f6; margin: 0; padding: 15px; color: #1f2937; }
-        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        h2 { text-align: center; margin-top: 0; color: #1e3a8a; margin-bottom: 25px; }
-        .section-title { font-size: 18px; font-weight: bold; margin: 25px 0 15px 0; padding-bottom: 5px; border-bottom: 2px solid #e5e7eb; }
-        .row { display: flex; flex-direction: column; gap: 15px; }
-        @media(min-width: 600px) { .row { flex-direction: row; } .col-5 { flex: 5; } .col-7 { flex: 7; } }
-        .card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
-        .card-header { font-weight: bold; margin-bottom: 12px; font-size: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; }
-        .bg-primary { color: #1e40af; } .bg-success { color: #065f46; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; margin-bottom: 5px; font-size: 14px; font-weight: 500; }
-        .form-control, .form-select { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
-        .form-control[readonly] { background-color: #e5e7eb; font-weight: bold; }
-        .btn { display: inline-block; width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer; text-align: center; }
-        .btn-success { background: #10b981; color: white; }
-        .btn-primary { background: #3b82f6; color: white; }
-        .btn-danger { background: #ef4444; color: white; }
-        .btn-warning { background: #f59e0b; color: white; width: auto; padding: 4px 8px; font-size: 12px; border-radius: 4px; }
-        .btn-sm-danger { background: #ef4444; color: white; width: auto; padding: 4px 8px; font-size: 12px; border-radius: 4px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-        th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
-        th { background: #f3f4f6; }
-        .d-none { display: none !important; }
-        .flex-box { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 16px; }
-        .grid-3 { display: grid; grid-template-columns: 1fr; gap: 10px; }
-        @media(min-width: 500px) { .grid-3 { grid-template-columns: 1fr 1fr 1fr; } }
-        .badge-card { padding: 15px; border-radius: 8px; color: white; text-align: center; }
-        @media print { body * { visibility: hidden; } #area-cetak-struk, #area-cetak-struk * { visibility: visible; } #area-cetak-struk { position: absolute; left: 0; top: 0; width: 100%; } .no-print { display: none !important; } }
-    </style>
+    <title>Kasir Sembako Mandiri</title>
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    <style>body{background:#f3f4f6;padding:10px;} .card{margin-bottom:15px;}</style>
 </head>
 <body>
-
-<div class="container no-print" id="konten-aplikasi">
-    <h2>🏪 Sistem Kasir & Manajemen Stok Sembako</h2>
-
-    <!-- ================= 1. MENU TRANSAKSI KASIR ================= -->
-    <div class="section-title" style="color: #1e3a8a;">🛒 1. Menu Kasir Jualan</div>
+<div class="container-fluid">
+    <h3 class="text-center text-primary my-3">🏪 Kasir Sembako Mandiri</h3>
     <div class="row">
-        <div class="col-5">
-            <div class="card">
-                <div class="card-header bg-primary">Transaksi Baru</div>
-                <form onsubmit="tambahKeKeranjang(event)">
-                    <div class="form-group"><label>Pilih Produk</label><select id="pilih-produk" class="form-select" onchange="updateInfoHarga()" required></select></div>
-                    <div class="form-group"><label>Sisa Stok Gudang</label><input type="text" id="info-stok" class="form-control" readonly value="0"></div>
-                    <div class="form-group"><label>Harga Satuan Jual</label><input type="text" id="harga-satuan" class="form-control" readonly value="Rp0"></div>
-                    <div class="form-group"><label>Jumlah Beli (Qty)</label><input type="number" id="jumlah-beli" class="form-control" min="1" value="1" required></div>
-                    <button type="submit" class="btn btn-success">➕ Tambah ke Keranjang</button>
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm">
+                <h5>⚙️ Input / Edit Produk</h5>
+                <form id="f-produk" onsubmit="saveBarang(event)">
+                    <input type="hidden" id="e-id">
+                    <div class="mb-2"><label>Nama Barang</label><input type="text" id="i-nama" class="form-control form-control-sm" required></div>
+                    <div class="mb-2"><label>Harga Modal</label><input type="number" id="i-modal" class="form-control form-control-sm" required></div>
+                    <div class="mb-2"><label>Harga Jual</label><input type="number" id="i-harga" class="form-control form-control-sm" required></div>
+                    <div class="mb-2"><label>Jumlah Stok</label><input type="number" id="i-stok" class="form-control form-control-sm" required></div>
+                    <button type="submit" class="btn btn-success btn-sm w-100" id="btn-save">Simpan Barang</button>
+                    <button type="button" class="btn btn-secondary btn-sm w-100 mt-1 d-none" id="btn-batal" onclick="batal()">Batal</button>
                 </form>
             </div>
-        </div>
-        <div class="col-7">
-            <div class="card"><div class="card-header">Keranjang Belanja</div><div style="overflow-x:auto;"><table><thead><tr><th>Nama Barang</th><th>Harga</th><th>Qty</th><th>Subtotal</th><th>Hapus</th></tr></thead><tbody id="tabel-keranjang"></tbody></table></div></div>
-            <div class="card">
-                <div class="flex-box"><strong>Total Belanja:</strong><strong style="color:red; font-size:20px;" id="total-belanja">Rp0</strong></div>
-                <div class="row" style="margin-bottom:10px;">
-                    <div style="flex:1;"><label style="font-size:12px; font-weight:bold;">Uang Tunai</label><input type="number" id="uang-bayar" class="form-control" oninput="hitungKembalian()"></div>
-                    <div style="flex:1;"><label style="font-size:12px; font-weight:bold;">Kembalian</label><input type="text" id="uang-kembali" class="form-control" readonly value="Rp0"></div>
-                </div>
-                <div style="display:flex; gap:10px;"><button class="btn btn-danger" style="flex:1;" onclick="resetKasir()">Kosongkan</button><button class="btn btn-primary" style="flex:2;" onclick="selesaikanTransaksi()">💸 Selesai & Potong Stok</button></div>
+            <div class="card p-3 shadow-sm bg-light">
+                <h6>📊 Ringkasan Keuntungan</h6>
+                <div>Laba Bersih: <strong class="text-success" id="l-laba">Rp0</strong></div>
+                <button class="btn btn-danger btn-sm w-100 mt-2" onclick="resetSemua()">⚠️ Kosongkan Semua Data</button>
             </div>
         </div>
-    </div>
-
-    <!-- ================= 2. PENGATURAN STOK BARANG ================= -->
-    <div class="section-title" style="color: #065f46;">⚙️ 2. Atur Barang & Stok Gudang</div>
-    <div class="row">
-        <div class="col-5">
-            <div class="card">
-                <div class="card-header bg-success">Input / Edit Produk</div>
-                <form onsubmit="simpanProduk(event)">
-                    <input type="hidden" id="edit-id">
-                    <div class="form-group"><label>Nama Barang</label><input type="text" id="input-nama" class="form-control" required></div>
-                    <div class="form-group"><label>Harga Modal (Rp)</label><input type="number" id="input-modal" class="form-control" required></div>
-                    <div class="form-group"><label>Harga Jual (Rp)</label><input type="number" id="input-harga" class="form-control" required></div>
-                    <div class="form-group"><label>Jumlah Stok</label><input type="number" id="input-stok" class="form-control" required></div>
-                    <button type="submit" class="btn btn-success" id="btn-simpan-produk">Simpan Produk</button>
-                    <button type="button" class="btn btn-danger d-none" id="btn-batal-edit" onclick="batalEdit()" style="margin-top:5px;">Batal</button>
+        <div class="col-md-8">
+            <div class="card p-3 shadow-sm bg-primary text-white">
+                <h5>🛒 Transaksi Baru</h5>
+                <form onsubmit="keKeranjang(event)" class="row g-2">
+                    <div class="col-6"><select id="p-pilih" class="form-select form-select-sm" onchange="cekHarga()" required></select></div>
+                    <div class="col-3"><input type="number" id="p-qty" class="form-control form-control-sm" min="1" value="1" placeholder="Qty"></div>
+                    <div class="col-3"><button type="submit" class="btn btn-light btn-sm w-100">Tambah</button></div>
                 </form>
+                <div class="mt-2 small">Stok: <span id="t-stok">0</span> | Harga: <span id="t-harga">Rp0</span></div>
+            </div>
+            <div class="card p-3 shadow-sm">
+                <h6>Daftar Belanja & Stok Gudang</h6>
+                <table class="table table-sm table-striped">
+                    <thead><tr><th>Nama</th><th>Stok</th><th>Harga</th><th>Aksi</th></tr></thead>
+                    <tbody id="t-gudang"></tbody>
+                </table>
             </div>
         </div>
-        <div class="col-7"><div class="card"><div class="flex-box" style="align-items:center;"><strong>Daftar Master Stok</strong><button class="btn btn-warning" onclick="resetSistemTotal()">⚠️ Reset Memori</button></div><div style="overflow-x:auto;"><table><thead><tr><th>Nama Barang</th><th>Modal</th><th>Jual</th><th>Stok</th><th>Aksi</th></tr></thead><tbody id="tabel-master-produk"></tbody></table></div></div></div>
-    </div>
-
-    <!-- ================= 3. LAPORAN KEUNTUNGAN ================= -->
-    <div class="section-title" style="color: #b91c1c;">📊 3. Laporan Keuntungan & Riwayat</div>
-    <div class="grid-3" style="margin-bottom: 15px;">
-        <div class="badge-card" style="background:#2563eb;"><h5>💰 Total Omset</h5><h3 id="lap-omset">Rp0</h3></div>
-        <div class="badge-card" style="background:#4b5563;"><h5>📦 Total Modal</h5><h3 id="lap-modal">Rp0</h3></div>
-        <div class="badge-card" style="background:#059669;"><h5>📈 Laba Bersih</h5><h3 id="lap-untung">Rp0</h3></div>
-    </div>
-    <div class="card">
-        <div class="flex-box" style="align-items:center;"><strong>Riwayat Penjualan Terjual</strong><button class="btn btn-sm-danger" onclick="hapusRiwayatPenjualan()">Hapus Semua Riwayat</button></div>
-        <div style="overflow-x:auto;"><table><thead><tr><th>Waktu</th><th>Nama Barang</th><th>Qty</th><th>Total Jual</th><th>Keuntungan</th></tr></thead><tbody id="tabel-riwayat-penjualan"></tbody></table></div>
     </div>
 </div>
-
-<!-- AREA STRUK NOTA -->
-<div id="area-cetak-struk" class="d-none" style="max-width: 320px; margin: 30px auto; padding: 15px; background: white; border: 1px dashed black; font-family: monospace; font-size: 13px;">
-    <div style="text-align:center; margin-bottom:10px;"><h3 style="margin:0;">🏪 KASIR SEMBAKO GROSIR</h3><p style="margin:5px 0;">Terima Kasih Telah Berbelanja!<br><span id="struk-waktu"></span></p></div>
-    <div style="border-top:1px dashed black; margin:10px 0;"></div><div id="struk-items"></div><div style="border-top:1px dashed black; margin:10px 0;"></div>
-    <div class="flex-box"><span>TOTAL BELANJA:</span><span id="struk-total" style="font-weight:bold;"></span></div>
-    <div class="flex-box"><span>TUNAI:</span><span id="struk-tunai"></span></div>
-    <div class="flex-box"><span>KEMBALIAN:</span><span id="struk-kembali" style="font-weight:bold;"></span></div>
-    <div style="border-top:1px dashed black; margin:10px 0;"></div>
-    <div class="no-print" style="margin-top:15px;"><button class="btn btn-primary" onclick="window.print()" style="margin-bottom:5px;">🖨️ Cetak / Simpan Ke PDF</button><button class="btn btn-success" onclick="tutupStruk()">✨ Mulai Transaksi Baru</button></div>
-</div>
-
-<!-- MEMANGGIL MESIN HITUNG DARI CLOUD AMAN AGAR TIDAK TERPOTONG iPHONE -->
-<script src="kasir-inti.js"><script>
+<script>
+    let produk = JSON.parse(localStorage.getItem('k_prod')) || [];
+    let riwayat = JSON.parse(localStorage.getItem('k_riw')) || 0;
+    function refresh(){
+        localStorage.setItem('k_prod', JSON.stringify(produk)); localStorage.setItem('k_riw', riwayat);
+        const sel = document.getElementById('p-pilih'); sel.innerHTML = '<option value="">-- Pilih --</option>';
+        const tb = document.getElementById('t-gudang'); tb.innerHTML = '';
+        produk.forEach(p => {
+            sel.innerHTML += `<option value="${p.id}">${p.nama}</option>`;
+            tb.innerHTML += `<tr><td>${p.nama}</td><td><strong>${p.stok}</strong></td><td>Rp${p.harga.toLocaleString()}</td><td><button class="btn btn-warning btn-xs py-0 px-1" onclick="edit('${p.id}')">✏️</button> <button class="btn btn-danger btn-xs py-0 px-1" onclick="hapus('${p.id}')">🗑️</button></td></tr>`;
+        });
+        document.getElementById('l-laba').innerText = "Rp" + riwayat.toLocaleString(); cekHarga();
+    }
+    function saveBarang(e){
+        e.preventDefault(); const id = document.getElementById('e-id').value; const nama = document.getElementById('i-nama').value; const modal = parseInt(document.getElementById('i-modal').value); const harga = parseInt(document.getElementById('i-harga').value); const stok = parseInt(document.getElementById('i-stok').value);
+        if(id){ const idx = produk.findIndex(p=>p.id===id); produk[idx]={id,nama,modal,harga,stok}; batal(); }
+        else{ produk.push({id:Date.now().toString(),nama,modal,harga,stok}); }
+        document.getElementById('f-produk').reset(); refresh();
+    }
+    function edit(id){
+        const p = produk.find(x=>x.id===id); if(!p) return;
+        document.getElementById('e-id').value=p.id; document.getElementById('i-nama').value=p.nama; document.getElementById('i-modal').value=p.modal; document.getElementById('i-harga').value=p.harga; document.getElementById('i-stok').value=p.stok;
+        document.getElementById('btn-save').innerText="Simpan Perubahan"; document.getElementById('btn-batal').classList.remove('d-none');
+    }
+    function batal(){ document.getElementById('e-id').value=''; document.getElementById('f-produk').reset(); document.getElementById('btn-save').innerText="Simpan Barang"; document.getElementById('btn-batal').classList.add('d-none'); }
+    function hapus(id){ if(confirm("Hapus?")){ produk=produk.filter(p=>p.id!==id); refresh(); } }
+    function cekHarga(){
+        const id = document.getElementById('p-pilih').value; const p = produk.find(x=>x.id===id);
+        document.getElementById('t-stok').innerText = p ? p.stok : 0; document.getElementById('t-harga').innerText = p ? "Rp"+p.harga.toLocaleString() : "Rp0";
+    }
+    function keKeranjang(e){
+        e.preventDefault(); const id = document.getElementById('p-pilih').value; const qty = parseInt(document.getElementById('p-qty').value); const p = produk.find(x=>x.id===id);
+        if(!p || qty > p.stok){ alert("Stok Kurang!"); return; }
+        p.stok -= qty; riwayat += (p.harga - p.modal) * qty; alert("💸 Transaksi Berhasil! Laba Otomatis Tercatat.");
+        document.getElementById('p-qty').value = 1; refresh();
+    }
+    function resetSemua(){ if(confirm("Hapus Semua Data?")){ localStorage.clear(); produk=[]; riwayat=0; refresh(); } }
+    window.onload = refresh;
+</script>
 </body>
 </html>
