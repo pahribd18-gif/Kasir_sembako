@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Kasir Grosir + Laporan Keuntungan</title>
+    <title>Kasir Sembako Grosir</title>
     <link href="https://jsdelivr.net" rel="stylesheet">
     <style>
         body { background-color: #f8f9fa; }
@@ -11,28 +11,27 @@
         .tab-kustom { display: none; }
         .tab-kustom.aktif { display: block; }
         .nav-link { cursor: pointer; font-weight: bold; }
+        @media print {
+            body * { visibility: hidden; }
+            #area-cetak-struk, #area-cetak-struk * { visibility: visible; }
+            #area-cetak-struk { position: absolute; left: 0; top: 0; width: 100%; font-family: monospace; font-size: 12px; }
+            .no-print { display: none !important; }
+        }
     </style>
 </head>
 <body>
 
-<div class="container py-4">
-    <h2 class="text-center mb-4">🏪 Kasir, Stok & Keuntungan Grosir</h2>
+<div class="container py-4 no-print">
+    <h2 class="text-center mb-4">🏪 Kasir & Stok Sembako</h2>
 
-    <!-- Menu Navigasi Halaman Mandiri -->
     <ul class="nav nav-tabs mb-4">
-        <li class="nav-item">
-            <a class="nav-link active" id="btn-tab-kasir" onclick="pindahHalaman('halaman-kasir')">🛒 Menu Kasir</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-success" id="btn-tab-admin" onclick="pindahHalaman('halaman-admin')">⚙️ Atur Barang & Stok</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-danger" id="btn-tab-laporan" onclick="pindahHalaman('halaman-laporan')">📊 Laporan Keuntungan</a>
-        </li>
+        <li class="nav-item"><a class="nav-link active" id="btn-tab-kasir" onclick="pindahHalaman('halaman-kasir')">🛒 Menu Kasir</a></li>
+        <li class="nav-item"><a class="nav-link text-success" id="btn-tab-admin" onclick="pindahHalaman('halaman-admin')">⚙️ Atur Barang & Stok</a></li>
+        <li class="nav-item"><a class="nav-link text-danger" id="btn-tab-laporan" onclick="pindahHalaman('halaman-laporan')">📊 Laporan Keuntungan</a></li>
     </ul>
 
     <div>
-        <!-- ================= HALAMAN KASIR ================= -->
+        <!-- TAB KASIR -->
         <div id="halaman-kasir" class="tab-kustom aktif">
             <div class="row g-3">
                 <div class="col-md-5">
@@ -42,76 +41,36 @@
                             <form id="form-kasir" onsubmit="tambahKeKeranjang(event)">
                                 <div class="mb-3">
                                     <label class="form-label">Pilih Produk</label>
-                                    <select id="pilih-produk" class="form-select" onchange="updateInfoHarga()" required>
-                                        <!-- Diisi otomatis oleh JavaScript -->
-                                    </select>
+                                    <select id="pilih-produk" class="form-select" onchange="updateInfoHarga()" required></select>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Info Stok Tersedia</label>
-                                    <input type="text" id="info-stok" class="form-control fw-bold" readonly value="0">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Harga Satuan Jual</label>
-                                    <input type="text" id="harga-satuan" class="form-control" readonly value="Rp0">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Jumlah Beli (Qty)</label>
-                                    <input type="number" id="jumlah-beli" class="form-control" min="1" value="1" required>
-                                </div>
+                                <div class="mb-3"><label class="form-label">Info Stok</label><input type="text" id="info-stok" class="form-control fw-bold" readonly value="0"></div>
+                                <div class="mb-3"><label class="form-label">Harga Jual</label><input type="text" id="harga-satuan" class="form-control" readonly value="Rp0"></div>
+                                <div class="mb-3"><label class="form-label">Jumlah Beli (Qty)</label><input type="number" id="jumlah-beli" class="form-control" min="1" value="1" required></div>
                                 <button type="submit" class="btn btn-success w-100">Tambah ke Keranjang</button>
                             </form>
                         </div>
                     </div>
                 </div>
-
                 <div class="col-md-7">
                     <div class="card shadow-sm mb-3">
                         <div class="card-header bg-secondary text-white">Keranjang Belanja</div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-striped align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th>Nama Barang</th>
-                                            <th>Harga</th>
-                                            <th>Qty</th>
-                                            <th>Subtotal</th>
-                                            <th>Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tabel-keranjang"></tbody>
-                                </table>
-                            </div>
-                        </div>
+                        <div class="card-body"><div class="table-responsive"><table class="table table-striped align-middle"><thead><tr><th>Nama Barang</th><th>Harga</th><th>Qty</th><th>Subtotal</th><th>Aksi</th></tr></thead><tbody id="tabel-keranjang"></tbody></table></div></div>
                     </div>
-
                     <div class="card shadow-sm">
                         <div class="card-body bg-light">
-                            <div class="d-flex justify-content-between mb-2">
-                                <h4>Total:</h4>
-                                <h4 class="text-danger" id="total-belanja">Rp0</h4>
-                            </div>
+                            <div class="d-flex justify-content-between mb-2"><h4>Total:</h4><h4 class="text-danger" id="total-belanja">Rp0</h4></div>
                             <div class="row g-2">
-                                <div class="col-6">
-                                    <label class="form-label">Uang Tunai</label>
-                                    <input type="number" id="uang-bayar" class="form-control" oninput="hitungKembalian()">
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label">Kembalian</label>
-                                    <input type="text" id="uang-kembali" class="form-control fw-bold text-success" readonly value="Rp0">
-                                </div>
+                                <div class="col-6"><label class="form-label">Uang Tunai</label><input type="number" id="uang-bayar" class="form-control" oninput="hitungKembalian()"></div>
+                                <div class="col-6"><label class="form-label">Kembalian</label><input type="text" id="uang-kembali" class="form-control fw-bold text-success" readonly value="Rp0"></div>
                             </div>
-                            <div class="d-flex gap-2 mt-3">
-                                <button class="btn btn-danger btn-sm" onclick="resetKasir()">Kosongkan Keranjang</button>
-                                <button class="btn btn-primary btn-sm flex-grow-1" onclick="selesaikanTransaksi()">Selesai & Potong Stok</button>
-                            </div>
+                            <div class="d-flex gap-2 mt-3"><button class="btn btn-danger btn-sm" onclick="resetKasir()">Kosongkan</button><button class="btn btn-primary btn-sm flex-grow-1" onclick="selesaikanTransaksi()">Selesai & Potong Stok</button></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ================= HALAMAN ADMIN (MANAJEMEN BARANG) ================= -->
+        <!-- TAB ADMIN -->
         <div id="halaman-admin" class="tab-kustom">
             <div class="row g-3">
                 <div class="col-md-4">
@@ -120,60 +79,57 @@
                         <div class="card-body">
                             <form id="form-produk" onsubmit="simpanProduk(event)">
                                 <input type="hidden" id="edit-id">
-                                <div class="mb-3">
-                                    <label class="form-label">Nama Barang Grosir</label>
-                                    <input type="text" id="input-nama" class="form-control" placeholder="Contoh: Minyak Goreng 2L" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Harga Modal Belanja (Rp)</label>
-                                    <input type="number" id="input-modal" class="form-control" placeholder="Contoh: 140000" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Harga Jual Toko (Rp)</label>
-                                    <input type="number" id="input-harga" class="form-control" placeholder="Contoh: 165000" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Jumlah Stok</label>
-                                    <input type="number" id="input-stok" class="form-control" placeholder="Contoh: 50" required>
-                                </div>
+                                <div class="mb-3"><label class="form-label">Nama Barang</label><input type="text" id="input-nama" class="form-control" required></div>
+                                <div class="mb-3"><label class="form-label">Harga Modal (Rp)</label><input type="number" id="input-modal" class="form-control" required></div>
+                                <div class="mb-3"><label class="form-label">Harga Jual (Rp)</label><input type="number" id="input-harga" class="form-control" required></div>
+                                <div class="mb-3"><label class="form-label">Jumlah Stok</label><input type="number" id="input-stok" class="form-control" required></div>
                                 <button type="submit" class="btn btn-success w-100" id="btn-simpan-produk">Tambah Produk Baru</button>
                                 <button type="button" class="btn btn-secondary w-100 mt-2 d-none" id="btn-batal-edit" onclick="batalEdit()">Batal Edit</button>
                             </form>
                         </div>
                     </div>
                 </div>
-
                 <div class="col-md-8">
                     <div class="card shadow-sm">
-                        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                            <span>Daftar Stok & Master Barang</span>
-                            <button class="btn btn-warning btn-sm fw-bold text-dark" onclick="resetSistemTotal()">⚠️ Reset Total Memori</button>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-hover align-middle">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Nama Barang</th>
-                                            <th>Harga Modal</th>
-                                            <th>Harga Jual</th>
-                                            <th>Stok</th>
-                                            <th>Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tabel-master-produk"></tbody>
-                                </table>
-                            </div>
-                        </div>
+                        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center"><span>Master Barang</span><button class="btn btn-warning btn-sm fw-bold text-dark" onclick="resetSistemTotal()">⚠️ Reset Total Memori</button></div>
+                        <div class="card-body"><div class="table-responsive"><table class="table table-bordered table-hover align-middle"><thead class="table-light"><tr><th>Nama Barang</th><th>Modal</th><th>Jual</th><th>Stok</th><th>Aksi</th></tr></thead><tbody id="tabel-master-produk"></tbody></table></div></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ================= HALAMAN LAPORAN KEUANGAN ================= -->
+        <!-- TAB LAPORAN -->
         <div id="halaman-laporan" class="tab-kustom">
             <div class="row g-3 mb-4">
-                <div class="col-md-4">
-                    <div class="card bg-primary text-white text-center p-3 shadow-sm">
-                        <h5>💰 Total Omset Penjualan</h5>
-                        <h3 id="lap-omset">Rp0</h3>
+                <div class="col-md-4"><div class="card bg-primary text-white text-center p-3 shadow-sm"><h5>💰 Total Omset</h5><h3 id="lap-omset">Rp0</h3></div></div>
+                <div class="col-md-4"><div class="card bg-secondary text-white text-center p-3 shadow-sm"><h5>📦 Total Modal</h5><h3 id="lap-modal">Rp0</h3></div></div>
+                <div class="col-md-4"><div class="card bg-success text-white text-center p-3 shadow-sm"><h5>📈 Laba Bersih</h5><h3 id="lap-untung">Rp0</h3></div></div>
+            </div>
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center"><span>Riwayat Terjual</span><button class="btn btn-light btn-sm fw-bold text-danger" onclick="hapusRiwayatPenjualan()">Hapus Semua Riwayat</button></div>
+                <div class="card-body"><div class="table-responsive"><table class="table table-striped table-bordered align-middle"><thead class="table-light"><tr><th>Waktu</th><th>Nama Barang</th><th>Qty</th><th>Total Jual</th><th>Total Laba</th></tr></thead><tbody id="tabel-riwayat-penjualan"></tbody></table></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- STRUK NOTA -->
+<div id="area-cetak-struk" class="p-3 bg-white d-none shadow-sm" style="max-width: 350px; margin: auto; border: 1px dashed #000;">
+    <div class="text-center"><h4>🏪 KASIR SEMBAKO GROSIR</h4><p>Terima Kasih Telah Berbelanja!<br><span id="struk-waktu"></span></p></div>
+    <hr style="border-top: 1px dashed #000;"><div id="struk-items"></div><hr style="border-top: 1px dashed #000;">
+    <div class="d-flex justify-content-between"><span>TOTAL:</span><span id="struk-total" class="fw-bold"></span></div>
+    <div class="d-flex justify-content-between"><span>TUNAI:</span><span id="struk-tunai"></span></div>
+    <div class="d-flex justify-content-between"><span>KEMBALIAN:</span><span id="struk-kembali" class="fw-bold"></span></div>
+    <hr style="border-top: 1px dashed #000;">
+    <div class="text-center mt-3 no-print"><button class="btn btn-sm btn-dark w-100 mb-2" onclick="window.print()">🖨️ Cetak / Simpan PDF</button><button class="btn btn-sm btn-success w-100" onclick="tutupStruk()">✨ Transaksi Baru</button></div>
+</div>
+
+<!-- MENGHUBUNGKAN DUA FILE SCRIPT UTAMA -->
+<script src="produk.js"></script>
+<script>
+    function pindahHalaman(idHalaman) {
+        document.querySelectorAll('.tab-kustom').forEach(h => { h.classList.remove('aktif'); });
+        document.querySelectorAll('.nav-link').forEach(t => { t.classList.remove('active'); });
+        document.getElementById(idHalaman).classList.add('aktif');
+        if(idHalaman === 'halaman-kasir') document.getElementById('btn-tab-kasir').classList.add('active');
+        if(idHalaman === 'halaman-admin') document.getElementById('btn-tab-admin').classList.add('active');
