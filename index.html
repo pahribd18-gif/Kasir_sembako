@@ -1,102 +1,142 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Kasir Sembako Kedai Arfaaz</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kedai Arfaaz - Kasir & Gudang</title>
+    <!-- 1. AMBIL LIBRARY SUPABASE LEWAT CDN -->
+    <script src="https://jsdelivr.net"></script>
     <style>
-        body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f3f4f6;margin:0;padding:12px;color:#1f2937;}
-        .container{max-width:800px;margin:0 auto;} .text-center{text-align:center;} .fw-bold{font-weight:bold;}
-        .card{background:#fff;border-radius:10px;padding:15px;margin-bottom:15px;box-shadow:0 2px 4px rgba(0,0,0,0.05);}
-        .card-header{font-weight:bold;font-size:16px;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #e5e7eb;color:#1e3a8a;}
-        .form-group{margin-bottom:10px;} .form-group label{display:block;margin-bottom:4px;font-size:13px;font-weight:600;}
-        .form-control{width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;font-size:14px;}
-        .btn{display:block;width:100%;padding:10px;border:none;border-radius:6px;font-weight:bold;font-size:14px;cursor:pointer;text-align:center;}
-        .btn-success{background:#10b981;color:#fff;} .btn-primary{background:#3b82f6;color:#fff;} .btn-danger{background:#ef4444;color:#fff;}
-        table{width:100%;border-collapse:collapse;margin-top:5px;font-size:13px;} th,td{border:1px solid #e5e7eb;padding:8px;text-align:left;} th{background:#f3f4f6;}
-        .badge{padding:3px 6px;border-radius:4px;font-size:11px;font-weight:bold;color:#fff;background:#6b7280;}
-        .flex-box{display:flex;justify-content:space-between;margin-bottom:8px;} .d-none{display:none!important;}
-        .badge-card{padding:12px;border-radius:8px;color:#fff;text-align:center;margin-bottom:10px;background:#2563eb;}
+        /* Gaya CSS Anda tetap sama seperti sebelumnya di sini */
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="text-center" style="margin-bottom:15px;">
-        <h3 style="margin:5px 0 0 0;color:#1e3a8a;">🏪 KEDAI ARFAAZ</h3>
-        <p style="margin:2px 0;font-size:12px;color:#6b7280;">Sistem Kasir &amp; Stok Gudang Digital Mandiri</p>
-    </div>
-    <!-- 1. KASIR TRANSAKSI -->
-    <div class="card" style="background:#eff6ff;border-left:4px solid #2563eb;">
-        <div class="card-header">🛒 1. Menu Kasir Jualan</div>
-        <form onsubmit="keKeranjang(event)">
-            <div style="display:flex;gap:10px;margin-bottom:8px;">
-                <div style="flex:2;"><select id="p-pilih" class="form-control" onchange="cekHarga()" required></select></div>
-                <div style="flex:1;"><input type="number" id="p-qty" class="form-control" min="1" value="1"></div>
-                <div style="flex:1;"><button type="submit" class="btn btn-primary" style="padding:8px;">Jual</button></div>
-            </div>
-        </form>
-        <div style="font-size:12px;font-weight:bold;color:#1e40af;">Stok Gudang: <span id="t-stok" class="badge" style="background:#f59e0b;color:#000;">0</span> | Harga Jual: <span id="t-harga" class="badge" style="background:#f3f4f6;color:#1e3a8a;">Rp0</span></div>
-    </div>
-    <!-- 2. ATUR STOK -->
-    <div class="card">
-        <div class="card-header" style="color:#065f46;">⚙️ 2. Input / Edit Produk Baru</div>
-        <form id="f-produk" onsubmit="saveBarang(event)">
-            <input type="hidden" id="e-id">
-            <div class="form-group"><label>Nama Barang</label><input type="text" id="i-nama" class="form-control" required></div>
-            <div class="form-group"><label>Harga Modal</label><input type="number" id="i-modal" class="form-control" required></div>
-            <div class="form-group"><label>Harga Jual</label><input type="number" id="i-harga" class="form-control" required></div>
-            <div class="form-group"><label>Jumlah Stok Gudang</label><input type="number" id="i-stok" class="form-control" required></div>
-            <button type="submit" class="btn btn-success" id="btn-save">Simpan Masuk Gudang</button>
-        </form>
-    </div>
-    <!-- 3. DETAIL STOK & TRANSAKSI -->
-    <div class="card">
-        <div class="card-header" style="color:#4b5563;">📋 Master Daftar Stok Sembako Gudang <button onclick="resetSistem()" style="float:right;background:#f59e0b;border:none;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:bold;cursor:pointer;">⚠️ Reset Alat</button></div>
-        <div style="overflow-x:auto;"><table><thead><tr><th>Nama Barang</th><th>Stok</th><th>Harga</th><th>Hapus</th></tr></thead><tbody id="t-gudang"></tbody></table></div>
-    </div>
-    <div class="card">
-        <div class="card-header" style="color:#b91c1c;">📊 3. Laporan Keuntungan &amp; Riwayat Harian</div>
-        <div class="form-group"><input type="date" id="filter-tanggal" class="form-control" onchange="loadRiwayat()"></div>
-        <div class="badge-card" style="background:#10b981;"><h6>📈 Total Keuntungan Bersih (Laba)</h6><h4 id="lap-untung" style="margin:5px 0 0 0;">Rp0</h4></div>
-        <div style="overflow-x:auto;"><table><thead><tr><th>Waktu</th><th>Nama Barang</th><th>Qty</th><th>Keuntungan</th></tr></thead><tbody id="t-riwayat"></tbody></table></div>
-    </div>
-</div>
-<script>
-    const pAwal = [
-        { id: "1", nama: "Minyak Goreng 2L (Dus)", modal: 145000, harga: 165000, stok: 20 },
-        { id: "2", nama: "Mie Instan (Dus)", modal: 100000, harga: 115000, stok: 45 },
-        { id: "3", nama: "Gula Pasir 10kg", modal: 120000, harga: 140000, stok: 15 }
-    ];
-    let produk = JSON.parse(localStorage.getItem('arfaaz_prod')) || pAwal;
-    let riwayat = JSON.parse(localStorage.getItem('arfaaz_riw')) || [];
-    window.onload = function() { document.getElementById('filter-tanggal').value = new Date().toISOString().split('T')[0]; refresh(); };
-    function refresh() {
-        localStorage.setItem('arfaaz_prod', JSON.stringify(produk)); localStorage.setItem('arfaaz_riw', JSON.stringify(riwayat));
-        const sel = document.getElementById('p-pilih'); sel.innerHTML = '<option value="">-- Pilih Produk --</option>';
-        const tb = document.getElementById('t-gudang'); tb.innerHTML = '';
-        produk.forEach(p => {
-            sel.innerHTML += `<option value="${p.id}">${p.nama}</option>`;
-            tb.innerHTML += `<tr><td><strong>${p.nama}</strong></td><td><span class="badge">${p.stok} Pcs</span></td><td>Rp${parseInt(p.harga).toLocaleString('id-ID')}</td><td><button class="btn btn-danger" style="padding:2px 6px;font-size:11px;" onclick="hapus('${p.id}')">🗑️</button></td></tr>`;
-        });
-        cekHarga(); loadRiwayat();
-    }
-    function loadRiwayat() {
-        const tgl = document.getElementById('filter-tanggal').value; const tbR = document.getElementById('t-riwayat'); tbR.innerHTML = ''; let labaTotal = 0;
-        const riwayatFilter = riwayat.filter(r => r.tanggal === tgl);
-        if(riwayatFilter.length === 0) { tbR.innerHTML = '<tr><td colspan="4" style="text-align:center;color:gray;">Belum ada penjualan hari ini</td></tr>'; }
-        else { riwayatFilter.forEach(row => { labaTotal += row.laba; tbR.innerHTML += `<tr><td><small style="color:gray;">${row.jam}</small></td><td><strong>${row.nama}</strong></td><td>${row.qty}</td><td style="color:green;font-weight:bold;">+Rp${row.laba.toLocaleString('id-ID')}</td></tr>`; }); }
-        document.getElementById('lap-untung').innerText = "Rp" + labaTotal.toLocaleString('id-ID');
-    }
-    function saveBarang(e) {
-        e.preventDefault(); const nama = document.getElementById('i-nama').value; const modal = parseInt(document.getElementById('i-modal').value); const harga = parseInt(document.getElementById('i-harga').value); const stok = parseInt(document.getElementById('i-stok').value);
-        produk.push({ id: Date.now().toString(), nama, modal, harga, stok }); document.getElementById('f-produk').reset(); refresh();
-    }
-    function hapus(id) { if(confirm("Hapus barang?")) { produk = produk.filter(p => p.id !== id); refresh(); } }
-    function cekHarga() { const id = document.getElementById('p-pilih').value; const p = produk.find(x => x.id === id); document.getElementById('t-stok').innerText = p ? p.stok : 0; document.getElementById('t-harga').innerText = p ? "Rp" + p.harga.toLocaleString('id-ID') : "Rp0"; }
-    function keKeranjang(e) {
-        e.preventDefault(); const id = document.getElementById('p-pilih').value; const qty = parseInt(document.getElementById('p-qty').value); const p = produk.find(x => x.id === id); if(!p || qty > p.stok) { alert("Stok Kurang!"); return; }
-        p.stok -= qty; const untung = (p.harga - p.modal) * qty; const tgl = new Date().toISOString().split('T')[0]; const jam = new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
-        riwayat.push({ tanggal: tgl, jam: jam, nama: p.nama, qty: qty, laba: untung }); alert("💸 Transaksi Berhasil! Stok terpotong."); document.getElementById('p-qty').value = 1; refresh();
-    }
-    function resetSistem() { if(confirm("Reset aplikasi ke pengaturan awal?")) { localStorage.clear(); produk = pAwal; riwayat = []; refresh(); } }
-</script>
+
+    <!-- HTML Tampilan Menu Input & Tabel Stok Anda Tetap Sama -->
+    <!-- Pastikan id pada input & tombol sesuai dengan kode di bawah -->
+
+    <script>
+        // 2. KONFIGURASI KUNCI AKSES SUPABASE
+        // Ganti teks di bawah dengan URL & Anon Key asli dari Settings > API di Supabase Anda
+        const SUPABASE_URL = "https://supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; 
+        
+        // Inisialisasi client Supabase
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Ambil elemen HTML yang dibutuhkan (Sesuaikan ID-nya dengan HTML Anda)
+        const inputNama = document.getElementById('nama_barang'); // ganti dengan id input nama Anda
+        const inputModal = document.getElementById('harga_modal'); // ganti dengan id input modal Anda
+        const inputJual = document.getElementById('harga_jual'); // ganti dengan id input jual Anda
+        const inputStok = document.getElementById('stok'); // ganti dengan id input stok Anda
+        const tombolSimpan = document.getElementById('tombol_simpan'); // ganti dengan id tombol simpan Anda
+        const tabelBody = document.getElementById('tabel_produk_body'); // ganti dengan id <tbody> tabel Anda
+
+        // ==========================================
+        // 3. FUNGSI UNTUK MENAMPILKAN DATA KE TABEL HTML
+        // ==========================================
+        function renderTabel(daftarProduk) {
+            tabelBody.innerHTML = ""; // Bersihkan tabel lama terlebih dahulu
+            
+            daftarProduk.forEach((produk) => {
+                const baris = document.createElement('tr');
+                baris.innerHTML = `
+                    <td>${produk.nama_barang}</td>
+                    <td><span class="badge">${produk.stok} Pcs</span></td>
+                    <td>Rp ${Number(produk.harga_jual).toLocaleString('id-ID')}</td>
+                    <td><button onclick="hapusProduk(${produk.id})" class="btn-hapus">🗑️</button></td>
+                `;
+                tabelBody.appendChild(baris);
+            });
+        }
+
+        // ==========================================
+        // 4. FUNGSI AMBIL DATA TERBARU DARI CLOUD
+        // ==========================================
+        async function ambilDataProduk() {
+            const { data, error } = await supabaseClient
+                .from('produk')
+                .select('*')
+                .order('created_at', { ascending: false }); // Produk baru tampil di paling atas
+
+            if (error) {
+                console.error("Gagal mengambil data:", error.message);
+            } else {
+                renderTabel(data);
+            }
+        }
+
+        // ==========================================
+        // 5. FUNGSI SIMPAN DATA KE SUPABASE (PENGGANTI LOCALSTORAGE)
+        // ==========================================
+        async function simpanProdukBaru(e) {
+            e.preventDefault(); // Mencegah halaman refresh otomatis saat form disubmit
+
+            const nama = inputNama.value;
+            const modal = parseFloat(inputModal.value) || 0;
+            const jual = parseFloat(inputJual.value) || 0;
+            const stok = parseInt(inputStok.value) || 0;
+
+            if (!nama) return alert("Nama barang tidak boleh kosong!");
+
+            const { error } = await supabaseClient
+                .from('produk')
+                .insert([{ 
+                    nama_barang: nama, 
+                    harga_modal: modal, 
+                    harga_jual: jual, 
+                    stok: stok 
+                }]);
+
+            if (error) {
+                alert("Gagal menyimpan data ke cloud: " + error.message);
+            } else {
+                // Kosongkan kembali form input setelah sukses dimasukkan
+                inputNama.value = "";
+                inputModal.value = "";
+                inputJual.value = "";
+                inputStok.value = "";
+            }
+        }
+
+        // ==========================================
+        // 6. FUNGSI HAPUS DATA DARI CLOUD
+        // ==========================================
+        async function hapusProduk(id) {
+            if (confirm("Apakah Anda yakin ingin menghapus produk ini?")) {
+                const { error } = await supabaseClient
+                    .from('produk')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) alert("Gagal menghapus: " + error.message);
+            }
+        }
+
+        // ==========================================
+        // 7. AKTIFKAN FITUR REALTIME (SINKRONISASI SEKETIKA)
+        // ==========================================
+        function jalankanFiturRealtime() {
+            supabaseClient
+                .channel('perubahan-stok-kedai')
+                .on(
+                    'postgres_changes', 
+                    { event: '*', schema: 'public', table: 'produk' }, 
+                    (payload) => {
+                        // Jika ada data masuk, berubah, atau dihapus di Supabase
+                        // Semua HP yang membuka web ini akan langsung mengambil data terbaru secara otomatis
+                        ambilDataProduk(); 
+                    }
+                )
+                .subscribe();
+        }
+
+        // Event listener saat tombol simpan diklik
+        tombolSimpan.addEventListener('click', simpanProdukBaru);
+
+        // Jalankan fungsi utama saat website pertama kali dibuka di browser HP
+        ambilDataProduk();
+        jalankanFiturRealtime();
+    </script>
 </body>
 </html>
