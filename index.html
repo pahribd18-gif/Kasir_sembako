@@ -2,61 +2,107 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Kasir Cloud Kedai Arfaaz</title>
-    <link href="https://jsdelivr.net" rel="stylesheet">
-    <style>body{background:#f3f4f6;padding:10px;} .card{margin-bottom:15px;border-radius:10px;border:none;} .logo-toko{width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #3b82f6;box-shadow:0 4px 6px rgba(0,0,0,0.1);} .badge-card{padding:15px;border-radius:8px;color:white;text-align:center;margin-bottom:10px;}</style>
+    <style>
+        body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f3f4f6;margin:0;padding:12px;color:#1f2937;}
+        .container{max-width:800px;margin:0 auto;} .text-center{text-align:center;} .fw-bold{font-weight:bold;}
+        .card{background:#fff;border-radius:10px;padding:15px;margin-bottom:15px;box-shadow:0 2px 4px rgba(0,0,0,0.05);}
+        .card-header{font-weight:bold;font-size:16px;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #e5e7eb;}
+        .text-primary{color:#1e3a8a;} .text-success{color:#065f46;} .text-danger{color:#b91c1c;}
+        .form-group{margin-bottom:10px;} .form-group label{display:block;margin-bottom:4px;font-size:13px;font-weight:600;}
+        .form-control{width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;font-size:14px;}
+        .form-control[readonly]{background:#e5e7eb;font-weight:bold;}
+        .btn{display:block;width:100%;padding:10px;border:none;border-radius:6px;font-weight:bold;font-size:14px;cursor:pointer;text-align:center;}
+        .btn-success{background:#10b981;color:#fff;} .btn-primary{background:#3b82f6;color:#fff;} .btn-danger{background:#ef4444;color:#fff;}
+        .btn-warning{background:#f59e0b;color:#fff;display:inline-block;width:auto;padding:3px 8px;font-size:12px;}
+        .btn-sm-danger{background:#ef4444;color:#fff;display:inline-block;width:auto;padding:3px 8px;font-size:12px;}
+        .btn-outline{background:none;border:1px solid #d1d5db;color:#4b5563;}
+        table{width:100%;border-collapse:collapse;margin-top:5px;font-size:13px;} th,td{border:1px solid #e5e7eb;padding:8px;text-align:left;} th{background:#f3f4f6;}
+        .badge{padding:3px 6px;border-radius:4px;font-size:11px;font-weight:bold;color:#fff;} .bg-secondary{background:#6b7280;} .bg-danger{background:#ef4444;} .bg-warning{background:#f59e0b;color:#1f2937;} .bg-light{background:#f3f4f6;color:#1e3a8a;}
+        .flex-box{display:flex;justify-content:space-between;margin-bottom:8px;} .d-none{display:none!important;}
+        .badge-card{padding:12px;border-radius:8px;color:#fff;text-align:center;margin-bottom:10px;}
+        .row-box{display:flex;flex-direction:column;gap:12px;} @media(min-width:600px){.row-box{flex-direction:row;} .col-5{flex:5;} .col-7{flex:7;}}
+        .logo-toko{width:70px;height:70px;border-radius:50%;object-fit:cover;border:3px solid #3b82f6;box-shadow:0 4px 6px rgba(0,0,0,0.1);display:inline-block;}
+    </style>
 </head>
 <body>
-<div class="container-fluid">
-    <div class="text-center my-3"><img src="logo.png" class="logo-toko mb-2" alt="Logo" onerror="this.src='https://unsplash.com'"><h3 class="fw-bold text-primary m-0">🏪 KEDAI ARFAAZ</h3><p class="text-muted small">Sistem Kasir, Stok & Laporan Penjualan Cloud Pusat</p></div>
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card p-3 shadow-sm"><h5 class="fw-bold text-secondary">⚙️ Input / Edit Produk</h5>
-                <form id="f-produk" onsubmit="saveBarang(event)"><input type="hidden" id="e-id"><div class="mb-2"><label class="small fw-semibold">Nama Barang</label><input type="text" id="i-nama" class="form-control form-control-sm" required></div><div class="mb-2"><label class="small fw-semibold">Harga Modal</label><input type="number" id="i-modal" class="form-control form-control-sm" required></div><div class="mb-2"><label class="small fw-semibold">Harga Jual</label><input type="number" id="i-harga" class="form-control form-control-sm" required></div><div class="mb-2"><label class="small fw-semibold">Jumlah Stok</label><input type="number" id="i-stok" class="form-control form-control-sm" required></div><button type="submit" class="btn btn-success btn-sm w-100 fw-bold" id="btn-save">Simpan Barang</button><button type="button" class="btn btn-secondary btn-sm w-100 mt-1 d-none fw-bold" id="btn-batal" onclick="btl()">Batal</button></form>
+<div class="container" id="konten-aplikasi">
+    <div class="text-center my-3">
+        <img src="logo.png" class="logo-toko mb-2" alt="Logo" onerror="this.src='https://unsplash.com'">
+        <h3 class="fw-bold text-primary" style="margin:5px 0 0 0;">🏪 KEDAI ARFAAZ</h3>
+        <p style="margin:2px 0;font-size:12px;color:#6b7280;">Sistem Kasir, Stok & Laporan Penjualan Cloud Pusat</p>
+    </div>
+
+    <!-- 1. MENU TRANSAKSI KASIR -->
+    <div class="card" style="background:#eff6ff; border-left:4px solid #2563eb;">
+        <div class="card-header text-primary">🛒 1. Menu Kasir Jualan (Semua HP Sinkron)</div>
+        <form onsubmit="keKeranjang(event)">
+            <div style="display:flex;gap:10px;margin-bottom:8px;">
+                <div style="flex:2;"><select id="p-pilih" class="form-control" onchange="cekHarga()" required></select></div>
+                <div style="flex:1;"><input type="number" id="p-qty" class="form-control" min="1" value="1" placeholder="Qty"></div>
+                <div style="flex:1;"><button type="submit" class="btn btn-primary" style="padding:8px;">Jual</button></div>
             </div>
-            <div class="card p-3 shadow-sm bg-white border-start border-danger border-4"><h5 class="fw-bold text-danger mb-2">🔍 Filter Laporan Harian</h5><div class="mb-2"><input type="date" id="filter-tanggal" class="form-control form-control-sm" onchange="loadRiwayat()"></div><button class="btn btn-sm btn-outline-secondary w-100 fw-bold mb-3" onclick="tampilkanSemuaHari()">Tampilkan Semua Hari</button><div class="badge-card bg-primary"><h6>💰 Total Omset</h6><h4 id="lap-omset">Rp0</h4></div><div class="badge-card bg-success"><h6>📈 Laba Bersih (Untung)</h6><h4 id="lap-untung">Rp0</h4></div></div>
+        </form>
+        <div style="font-size:12px;font-weight:bold;color:#1e40af;">Stok Gudang: <span id="t-stok" class="badge bg-warning">0</span> | Harga Jual: <span id="t-harga" class="badge bg-light">Rp0</span></div>
+    </div>
+
+    <div class="row-box">
+        <!-- 2. PENGATURAN STOK BARANG -->
+        <div class="col-5">
+            <div class="card">
+                <div class="card-header text-success">⚙️ 2. Input / Edit Produk</div>
+                <form id="f-produk" onsubmit="saveBarang(event)">
+                    <input type="hidden" id="e-id">
+                    <div class="form-group"><label>Nama Barang</label><input type="text" id="i-nama" class="form-control" required></div>
+                    <div class="form-group"><label>Harga Modal</label><input type="number" id="i-modal" class="form-control" required></div>
+                    <div class="form-group"><label>Harga Jual</label><input type="number" id="i-harga" class="form-control" required></div>
+                    <div class="form-group"><label>Jumlah Stok</label><input type="number" id="i-stok" class="form-control" required></div>
+                    <button type="submit" class="btn btn-success" id="btn-save">Simpan Barang</button>
+                    <button type="button" class="btn btn-danger btn-outline d-none" id="btn-batal" onclick="btl()" style="margin-top:5px;width:100%;">Batal</button>
+                </form>
+            </div>
+            
+            <!-- 3. LAPORAN KEUANGAN -->
+            <div class="card" style="border-start: 4px solid #ef4444;">
+                <div class="card-header text-danger">🔍 3. Filter Laporan Harian</div>
+                <div class="form-group"><input type="date" id="filter-tanggal" class="form-control" onchange="loadRiwayat()"></div>
+                <button class="btn btn-outline" style="padding:5px;font-size:12px;margin-bottom:10px;" onclick="tampilkanSemuaHari()">Tampilkan Semua Hari</button>
+                <div class="badge-card" style="background:#2563eb;"><h6>💰 Total Omset</h6><h4 id="lap-omset" style="margin:5px 0 0 0;">Rp0</h4></div>
+                <div class="badge-card" style="background:#10b981;"><h6>📈 Laba Bersih (Untung)</h6><h4 id="lap-untung" style="margin:5px 0 0 0;">Rp0</h4></div>
+            </div>
         </div>
-        <div class="col-md-8">
-            <div class="card p-3 shadow-sm bg-primary text-white"><h5 class="fw-bold">🛒 Transaksi Baru</h5><form onsubmit="keKeranjang(event)" class="row g-2"><div class="col-6"><select id="p-pilih" class="form-select form-select-sm" onchange="cekHarga()" required></select></div><div class="col-3"><input type="number" id="p-qty" class="form-control form-control-sm" min="1" value="1"></div><div class="col-3"><button type="submit" class="btn btn-light btn-sm w-100 fw-bold text-primary">Jual</button></div></form><div class="mt-2 small fw-semibold">Stok Gudang: <span id="t-stok" class="badge bg-warning text-dark">0</span> | Harga Jual: <span id="t-harga" class="badge bg-light text-primary">Rp0</span></div></div>
-            <div class="card p-3 shadow-sm"><h6 class="fw-bold text-secondary">📋 Master Stok Gudang Pusat</h6><div class="table-responsive"><table class="table table-sm table-striped align-middle"><thead class="table-light"><tr><th>Nama</th><th>Stok</th><th>Harga</th><th>Aksi</th></tr></thead><tbody id="t-gudang"></tbody></table></div></div>
-            <div class="card p-3 shadow-sm"><h6 class="fw-bold text-danger">📊 Riwayat Transaksi Terjual (Cloud)</h6><div class="table-responsive"><table class="table table-sm table-bordered table-striped align-middle"><thead class="table-light"><tr><th>Waktu</th><th>Barang</th><th>Qty</th><th>Total Jual</th><th>Laba</th></tr></thead><tbody id="t-riwayat"></tbody></table></div></div>
+
+        <!-- DAFTAR TABEL DATA -->
+        <div class="col-7">
+            <div class="card">
+                <div class="card-header text-secondary">📋 Master Stok Gudang Pusat</div>
+                <div style="overflow-x:auto;"><table><thead><tr><th>Nama</th><th>Stok</th><th>Harga</th><th>Aksi</th></tr></thead><tbody id="t-gudang"></tbody></table></div>
+            </div>
+            <div class="card">
+                <div class="card-header text-danger">📊 Riwayat Transaksi Terjual (Cloud)</div>
+                <div style="overflow-x:auto;"><table><thead><tr><th>Waktu</th><th>Barang</th><th>Qty</th><th>Total</th><th>Laba</th></tr></thead><tbody id="t-riwayat"></tbody></table></div>
+            </div>
         </div>
     </div>
 </div>
+
 <script>
     const bUrl = "https://supabase.co"; const sKey = "sb_publishable_vs-g2Pd_IFL5X8PVrApqTw_KdQTTAj0"; const hdrs = { "apikey": sKey, "Authorization": "Bearer " + sKey, "Content-Type": "application/json", "Prefer": "return=representation" }; let produk = [];
     window.onload = function() { document.getElementById('filter-tanggal').value = new Date().toISOString().split('T')[0]; loadData(); loadRiwayat(); };
     async function loadData() {
         try {
             const r = await fetch(bUrl + "master_produk?order=nama.asc", { headers: hdrs }); produk = await r.json(); const sel = document.getElementById('p-pilih'); sel.innerHTML = '<option value="">-- Pilih Produk --</option>'; const tb = document.getElementById('t-gudang'); tb.innerHTML = '';
-            produk.forEach(p => { sel.innerHTML += `<option value="${p.id}">${p.nama}</option>`; tb.innerHTML += `<tr><td><strong>${p.nama}</strong></td><td><span class="badge ${p.stok<=5?'bg-danger':'bg-secondary'}">${p.stok} Pcs</span></td><td>Rp${parseInt(p.harga).toLocaleString()}</td><td><button class="btn btn-warning btn-sm py-0 px-1" onclick="edit('${p.id}')">✏️</button> <button class="btn btn-danger btn-sm py-0 px-1" onclick="hapus('${p.id}')">🗑️</button></td></tr>`; }); cekHarga();
+            produk.forEach(p => { sel.innerHTML += `<option value="${p.id}">${p.nama}</option>`; tb.innerHTML += `<tr><td><strong>${p.nama}</strong></td><td><span class="badge ${p.stok<=5?'bg-danger':'bg-secondary'}">${p.stok} Pcs</span></td><td>Rp${parseInt(p.harga).toLocaleString()}</td><td><button class="btn-warning" onclick="edit('${p.id}')">✏️</button> <button class="btn-sm-danger" onclick="hapus('${p.id}')">🗑️</button></td></tr>`; }); cekHarga();
         } catch(e) { alert("Cloud offline / Gagal baca data"); }
     }
     async function loadRiwayat() {
         try {
             const tgl = document.getElementById('filter-tanggal').value; let url = bUrl + "riwayat_penjualan?order=id.desc"; if(tgl) { url += `&waktu=ilike.${tgl}*`; }
             const r = await fetch(url, { headers: hdrs }); const riwayat = await r.json(); const tbR = document.getElementById('t-riwayat'); tbR.innerHTML = ''; let omset = 0; let laba = 0;
-            if(riwayat.length === 0) { tbR.innerHTML = '<tr><td colspan="5" class="text-center text-muted small">Kosong</td></tr>'; } 
-            else { riwayat.forEach(row => { omset += parseInt(row.total_jual); laba += parseInt(row.laba); tbR.innerHTML += `<tr><td><small class="text-muted">${row.waktu}</small></td><td><strong>${row.nama_barang}</strong></td><td>${row.qty}</td><td>Rp${parseInt(row.total_jual).toLocaleString()}</td><td class="text-success fw-bold">+Rp${parseInt(row.laba).toLocaleString()}</td></tr>`; }); }
+            if(riwayat.length === 0) { tbR.innerHTML = '<tr><td colspan="5" style="text-align:center;color:gray;">Kosong</td></tr>'; } 
+            else { riwayat.forEach(row => { omset += parseInt(row.total_jual); laba += parseInt(row.laba); tbR.innerHTML += `<tr><td><small style="color:gray;">${row.waktu.split(' ')[1] || ''}</small></td><td><strong>${row.nama_barang}</strong></td><td>${row.qty}</td><td>Rp${parseInt(row.total_jual).toLocaleString()}</td><td style="color:green;font-weight:bold;">+Rp${parseInt(row.laba).toLocaleString()}</td></tr>`; }); }
             document.getElementById('lap-omset').innerText = "Rp" + omset.toLocaleString('id-ID'); document.getElementById('lap-untung').innerText = "Rp" + laba.toLocaleString('id-ID');
         } catch(e) {}
     }
     function tampilkanSemuaHari() { document.getElementById('filter-tanggal').value = ''; loadRiwayat(); }
     async function saveBarang(e) {
         e.preventDefault(); const id = document.getElementById('e-id').value; const nama = document.getElementById('i-nama').value; const modal = parseInt(document.getElementById('i-modal').value); const harga = document.getElementById('i-harga').value; const stok = parseInt(document.getElementById('i-stok').value); const data = { id: id || Date.now().toString(), nama, modal, harga, stok };
-        if(id) { await fetch(`${bUrl}master_produk?id=eq.${id}`, { method: "PATCH", headers: hdrs, body: JSON.stringify(data) }); btl(); } else { await fetch(bUrl + "master_produk", { method: "POST", headers: hdrs, body: JSON.stringify(data) }); }
-        document.getElementById('f-produk').reset(); loadData();
-    }
-    function edit(id) { const p = produk.find(x => x.id === id); if(!p) return; document.getElementById('e-id').value = p.id; document.getElementById('i-nama').value = p.nama; document.getElementById('i-modal').value = p.modal; document.getElementById('i-harga').value = p.harga; document.getElementById('i-stok').value = p.stok; document.getElementById('btn-save').innerText = "Simpan Perubahan"; document.getElementById('btn-batal').classList.remove('d-none'); }
-    function btl() { document.getElementById('e-id').value = ''; document.getElementById('f-produk').reset(); document.getElementById('btn-save').innerText = "Simpan Barang"; document.getElementById('btn-batal').classList.add('d-none'); }
-    async function hapus(id) { if(confirm("Hapus?")) { await fetch(`${bUrl}master_produk?id=eq.${id}`, { method: "DELETE", headers: hdrs }); loadData(); } }
-    function cekHarga() { const id = document.getElementById('p-pilih').value; const p = produk.find(x => x.id === id); document.getElementById('t-stok').innerText = p ? p.stok : 0; document.getElementById('t-harga').innerText = p ? "Rp" + parseInt(p.harga).toLocaleString() : "Rp0"; }
-    async function keKeranjang(e) {
-        e.preventDefault(); const id = document.getElementById('p-pilih').value; const qty = parseInt(document.getElementById('p-qty').value); const p = produk.find(x => x.id === id); if(!p || qty > p.stok) { alert("Stok Kurang!"); return; }
-        const sisaStok = p.stok - qty; const totalJual = parseInt(p.harga) * qty; const untung = (parseInt(p.harga) - p.modal) * qty; const tglJam = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
-        await fetch(bUrl + "riwayat_penjualan", { method: "POST", headers: hdrs, body: JSON.stringify({ waktu: tglJam, nama_barang: p.nama, qty: qty, total_jual: totalJual, laba: untung }) });
-        await fetch(`${bUrl}master_produk?id=eq.${id}`, { method: "PATCH", headers: hdrs, body: JSON.stringify({ stok: sisaStok }) });
-        alert("💸 Transaksi Berhasil! Stok cloud terpotong."); document.getElementById('p-qty').value = 1; loadData(); loadRiwayat();
-    }
-</script>
-</body>
-</html>
