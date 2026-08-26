@@ -7,13 +7,8 @@
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #f3f4f6; margin: 0; padding: 15px; color: #1f2937; }
         .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        h2 { text-align: center; margin-top: 0; color: #1e3a8a; }
-        .nav-tabs { display: flex; list-style: none; padding: 0; margin: 0 0 20px 0; border-bottom: 2px solid #e5e7eb; }
-        .nav-item { margin-right: 5px; }
-        .nav-link { display: block; padding: 10px 15px; text-decoration: none; font-weight: bold; color: #4b5563; border-radius: 6px 6px 0 0; cursor: pointer; }
-        .nav-link.active { color: #1d4ed8; border-bottom: 3px solid #1d4ed8; background: #eff6ff; }
-        .tab-content { display: none; }
-        .tab-content.aktif { display: block; }
+        h2 { text-align: center; margin-top: 0; color: #1e3a8a; margin-bottom: 25px; }
+        .section-title { font-size: 18px; font-weight: bold; margin: 25px 0 15px 0; padding-bottom: 5px; border-bottom: 2px solid #e5e7eb; }
         .row { display: flex; flex-direction: column; gap: 15px; }
         @media(min-width: 600px) { .row { flex-direction: row; } .col-5 { flex: 5; } .col-7 { flex: 7; } }
         .card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
@@ -43,77 +38,83 @@
 <body>
 
 <div class="container no-print" id="konten-aplikasi">
-    <h2>🏪 Sistem Manajemen Kasir & Stok Sembako</h2>
-    <ul class="nav nav-tabs">
-        <li class="nav-item"><a class="nav-link active" id="tab-kasir" onclick="pindahHalaman('halaman-kasir')">🛒 Menu Kasir</a></li>
-        <li class="nav-item"><a class="nav-link" id="tab-admin" onclick="pindahHalaman('halaman-admin')">⚙️ Atur Barang & Stok</a></li>
-        <li class="nav-item"><a class="nav-link" id="tab-laporan" onclick="pindahHalaman('halaman-laporan')">📊 Laporan Keuntungan</a></li>
-    </ul>
+    <h2>🏪 Sistem Kasir & Manajemen Stok Sembako</h2>
 
-    <div id="halaman-kasir" class="tab-content aktif">
-        <div class="row">
-            <div class="col-5">
-                <div class="card">
-                    <div class="card-header bg-primary">Transaksi Baru</div>
-                    <form onsubmit="tambahKeKeranjang(event)">
-                        <div class="form-group"><label>Pilih Produk</label><select id="pilih-produk" class="form-select" onchange="updateInfoHarga()" required></select></div>
-                        <div class="form-group"><label>Sisa Stok Gudang</label><input type="text" id="info-stok" class="form-control" readonly value="0"></div>
-                        <div class="form-group"><label>Harga Satuan Jual</label><input type="text" id="harga-satuan" class="form-control" readonly value="Rp0"></div>
-                        <div class="form-group"><label>Jumlah Beli (Qty)</label><input type="number" id="jumlah-beli" class="form-control" min="1" value="1" required></div>
-                        <button type="submit" class="btn btn-success">➕ Tambah ke Keranjang</button>
-                    </form>
-                </div>
+    <!-- ================= 1. MENU TRANSAKSI KASIR ================= -->
+    <div class="section-title" style="color: #1e3a8a;">🛒 1. Menu Kasir Jualan</div>
+    <div class="row">
+        <div class="col-5">
+            <div class="card">
+                <div class="card-header bg-primary">Transaksi Baru</div>
+                <form onsubmit="tambahKeKeranjang(event)">
+                    <div class="form-group"><label>Pilih Produk</label><select id="pilih-produk" class="form-select" onchange="updateInfoHarga()" required></select></div>
+                    <div class="form-group"><label>Sisa Stok Gudang</label><input type="text" id="info-stok" class="form-control" readonly value="0"></div>
+                    <div class="form-group"><label>Harga Satuan Jual</label><input type="text" id="harga-satuan" class="form-control" readonly value="Rp0"></div>
+                    <div class="form-group"><label>Jumlah Beli (Qty)</label><input type="number" id="jumlah-beli" class="form-control" min="1" value="1" required></div>
+                    <button type="submit" class="btn btn-success">➕ Tambah ke Keranjang</button>
+                </form>
             </div>
-            <div class="col-7">
-                <div class="card"><div class="card-header">Keranjang Belanja</div><div style="overflow-x:auto;"><table><thead><tr><th>Nama Barang</th><th>Harga</th><th>Qty</th><th>Subtotal</th><th>Hapus</th></tr></thead><tbody id="tabel-keranjang"></tbody></table></div></div>
-                <div class="card">
-                    <div class="flex-box"><strong>Total:</strong><strong style="color:red; font-size:20px;" id="total-belanja">Rp0</strong></div>
-                    <div class="row" style="margin-bottom:10px;">
-                        <div style="flex:1;"><label style="font-size:12px;">Uang Tunai</label><input type="number" id="uang-bayar" class="form-control" oninput="hitungKembalian()"></div>
-                        <div style="flex:1;"><label style="font-size:12px;">Kembalian</label><input type="text" id="uang-kembali" class="form-control" readonly value="Rp0"></div>
-                    </div>
-                    <div style="display:flex; gap:10px;"><button class="btn btn-danger" style="flex:1;" onclick="resetKasir()">Kosongkan</button><button class="btn btn-primary" style="flex:2;" onclick="selesaikanTransaksi()">💸 Selesai & Potong Stok</button></div>
+        </div>
+        <div class="col-7">
+            <div class="card"><div class="card-header">Keranjang Belanja</div><div style="overflow-x:auto;"><table><thead><tr><th>Nama Barang</th><th>Harga</th><th>Qty</th><th>Subtotal</th><th>Hapus</th></tr></thead><tbody id="tabel-keranjang"></tbody></table></div></div>
+            <div class="card">
+                <div class="flex-box"><strong>Total Belanja:</strong><strong style="color:red; font-size:20px;" id="total-belanja">Rp0</strong></div>
+                <div class="row" style="margin-bottom:10px;">
+                    <div style="flex:1;"><label style="font-size:12px; font-weight:bold;">Uang Tunai</label><input type="number" id="uang-bayar" class="form-control" oninput="hitungKembalian()"></div>
+                    <div style="flex:1;"><label style="font-size:12px; font-weight:bold;">Kembalian</label><input type="text" id="uang-kembali" class="form-control" readonly value="Rp0"></div>
                 </div>
+                <div style="display:flex; gap:10px;"><button class="btn btn-danger" style="flex:1;" onclick="resetKasir()">Kosongkan</button><button class="btn btn-primary" style="flex:2;" onclick="selesaikanTransaksi()">💸 Selesai & Potong Stok</button></div>
             </div>
         </div>
     </div>
 
-    <div id="halaman-admin" class="tab-content">
-        <div class="row">
-            <div class="col-5">
-                <div class="card">
-                    <div class="card-header bg-success">Input / Edit Produk</div>
-                    <form onsubmit="simpanProduk(event)">
-                        <input type="hidden" id="edit-id">
-                        <div class="form-group"><label>Nama Barang</label><input type="text" id="input-nama" class="form-control" required></div>
-                        <div class="form-group"><label>Harga Modal (Rp)</label><input type="number" id="input-modal" class="form-control" required></div>
-                        <div class="form-group"><label>Harga Jual (Rp)</label><input type="number" id="input-harga" class="form-control" required></div>
-                        <div class="form-group"><label>Jumlah Stok</label><input type="number" id="input-stok" class="form-control" required></div>
-                        <button type="submit" class="btn btn-success" id="btn-simpan-produk">Simpan Produk</button>
-                        <button type="button" class="btn btn-danger d-none" id="btn-batal-edit" onclick="batalEdit()" style="margin-top:5px;">Batal</button>
-                    </form>
-                </div>
+    <!-- ================= 2. PENGATURAN STOK BARANG ================= -->
+    <div class="section-title" style="color: #065f46;">⚙️ 2. Atur Barang & Stok Gudang</div>
+    <div class="row">
+        <div class="col-5">
+            <div class="card">
+                <div class="card-header bg-success">Input / Edit Produk</div>
+                <form onsubmit="simpanProduk(event)">
+                    <input type="hidden" id="edit-id">
+                    <div class="form-group"><label>Nama Barang</label><input type="text" id="input-nama" class="form-control" required></div>
+                    <div class="form-group"><label>Harga Modal (Rp)</label><input type="number" id="input-modal" class="form-control" required></div>
+                    <div class="form-group"><label>Harga Jual (Rp)</label><input type="number" id="input-harga" class="form-control" required></div>
+                    <div class="form-group"><label>Jumlah Stok</label><input type="number" id="input-stok" class="form-control" required></div>
+                    <button type="submit" class="btn btn-success" id="btn-simpan-produk">Simpan Produk</button>
+                    <button type="button" class="btn btn-danger d-none" id="btn-batal-edit" onclick="batalEdit()" style="margin-top:5px;">Batal</button>
+                </form>
             </div>
-            <div class="col-7"><div class="card"><div class="flex-box" style="align-items:center;"><strong>Daftar Master Stok</strong><button class="btn btn-warning" onclick="resetSistemTotal()">⚠️ Reset Memori</button></div><div style="overflow-x:auto;"><table><thead><tr><th>Nama Barang</th><th>Modal</th><th>Jual</th><th>Stok</th><th>Aksi</th></tr></thead><tbody id="tabel-master-produk"></tbody></table></div></div></div>
         </div>
+        <div class="col-7"><div class="card"><div class="flex-box" style="align-items:center;"><strong>Daftar Master Stok</strong><button class="btn btn-warning" onclick="resetSistemTotal()">⚠️ Reset Memori</button></div><div style="overflow-x:auto;"><table><thead><tr><th>Nama Barang</th><th>Modal</th><th>Jual</th><th>Stok</th><th>Aksi</th></tr></thead><tbody id="tabel-master-produk"></tbody></table></div></div></div>
     </div>
 
-    <div id="halaman-laporan" class="tab-content">
-        <div class="grid-3">
-            <div class="badge-card" style="background:#2563eb;"><h5>💰 Total Omset</h5><h3 id="lap-omset">Rp0</h3></div>
-            <div class="badge-card" style="background:#4b5563;"><h5>📦 Total Modal</h5><h3 id="lap-modal">Rp0</h3></div>
-            <div class="badge-card" style="background:#059669;"><h5>📈 Laba Bersih</h5><h3 id="lap-untung">Rp0</h3></div>
-        </div>
-        <div class="card" style="margin-top:15px;">
-            <div class="flex-box" style="align-items:center;"><strong>Riwayat Penjualan</strong><button class="btn btn-sm-danger" onclick="hapusRiwayatPenjualan()">Hapus Semua Riwayat</button></div>
-            <div style="overflow-x:auto;"><table><thead><tr><th>Waktu</th><th>Nama Barang</th><th>Qty</th><th>Total Jual</th><th>Keuntungan</th></tr></thead><tbody id="tabel-riwayat-penjualan"></tbody></table></div>
-        </div>
+    <!-- ================= 3. LAPORAN KEUNTUNGAN ================= -->
+    <div class="section-title" style="color: #b91c1c;">📊 3. Laporan Keuntungan & Riwayat</div>
+    <div class="grid-3" style="margin-bottom: 15px;">
+        <div class="badge-card" style="background:#2563eb;"><h5>💰 Total Omset</h5><h3 id="lap-omset">Rp0</h3></div>
+        <div class="badge-card" style="background:#4b5563;"><h5>📦 Total Modal</h5><h3 id="lap-modal">Rp0</h3></div>
+        <div class="badge-card" style="background:#059669;"><h5>📈 Laba Bersih</h5><h3 id="lap-untung">Rp0</h3></div>
+    </div>
+    <div class="card">
+        <div class="flex-box" style="align-items:center;"><strong>Riwayat Penjualan Terjual</strong><button class="btn btn-sm-danger" onclick="hapusRiwayatPenjualan()">Hapus Semua Riwayat</button></div>
+        <div style="overflow-x:auto;"><table><thead><tr><th>Waktu</th><th>Nama Barang</th><th>Qty</th><th>Total Jual</th><th>Keuntungan</th></tr></thead><tbody id="tabel-riwayat-penjualan"></tbody></table></div>
     </div>
 </div>
 
+<!-- AREA STRUK NOTA -->
 <div id="area-cetak-struk" class="d-none" style="max-width: 320px; margin: 30px auto; padding: 15px; background: white; border: 1px dashed black; font-family: monospace; font-size: 13px;">
     <div style="text-align:center; margin-bottom:10px;"><h3 style="margin:0;">🏪 KASIR SEMBAKO GROSIR</h3><p style="margin:5px 0;">Terima Kasih Telah Berbelanja!<br><span id="struk-waktu"></span></p></div>
     <div style="border-top:1px dashed black; margin:10px 0;"></div><div id="struk-items"></div><div style="border-top:1px dashed black; margin:10px 0;"></div>
     <div class="flex-box"><span>TOTAL BELANJA:</span><span id="struk-total" style="font-weight:bold;"></span></div>
     <div class="flex-box"><span>TUNAI:</span><span id="struk-tunai"></span></div>
     <div class="flex-box"><span>KEMBALIAN:</span><span id="struk-kembali" style="font-weight:bold;"></span></div>
+    <div style="border-top:1px dashed black; margin:10px 0;"></div>
+    <div class="no-print" style="margin-top:15px;"><button class="btn btn-primary" onclick="window.print()" style="margin-bottom:5px;">🖨️ Cetak / Simpan Ke PDF</button><button class="btn btn-success" onclick="tutupStruk()">✨ Mulai Transaksi Baru</button></div>
+</div>
+
+<script>
+    const produkAwal = [
+        { id: "1", nama: "Minyak Goreng 2L (Dus)", modal: 145000, harga: 165000, stok: 20 },
+        { id: "2", nama: "Mie Instan (Dus)", modal: 100000, harga: 115000, stok: 45 },
+        { id: "3", nama: "Gula Pasir 10kg", modal: 120000, harga: 140000, stok: 15 }
+    ];
