@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kasir Sembako Kedai Arfaaz</title>
+    <!-- PEMANGGILAN LIBRARY SUPABASE RESMI VIA CDN -->
+    <script src="https://jsdelivr.net"></script>
     <style>
         body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f3f4f6;margin:0;padding:12px;color:#1f2937;}
         .container{max-width:800px;margin:0 auto;} .text-center{text-align:center;} 
@@ -22,7 +24,7 @@
 <div class="container">
     <div class="text-center" style="margin-bottom:15px;">
         <h3 style="margin:5px 0 0 0;color:#1e3a8a;">🏪 KEDAI ARFAAZ</h3>
-        <p style="margin:2px 0;font-size:12px;color:#6b7280;">Sistem Kasir &amp; Stok Gudang Digital Mandiri</p>
+        <p style="margin:2px 0;font-size:12px;color:#6b7280;">Sistem Kasir &amp; Stok Gudang Digital Mandiri (Realtime)</p>
     </div>
     
     <!-- 1. KASIR TRANSAKSI -->
@@ -65,113 +67,97 @@
 </div>
 
 <script>
-    let produk = [];
-    let riwayat = [];
+    const SUPABASE_URL = "https://supabase.co";
+    const SUPABASE_KEY = "sb_publishable_vs-g2Pd_IFL5X8PVrApqTw_KdQTTAj0";
+    
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: { persistSession: false }
+    });
+
+    let listProduk = [];
 
     window.onload = function() { 
+        // Menggunakan format tanggal standar teks murni agar disetujui server cloud
         const d = new Date();
         const yyyy = d.getFullYear();
         const mm = String(d.getMonth() + 1).padStart(2, '0');
         const dd = String(d.getDate()).padStart(2, '0');
         document.getElementById('filter-tanggal').value = `${yyyy}-${mm}-${dd}`;
         
-        // Memuat penyimpanan lokal browser HP murni
-        produk = JSON.parse(localStorage.getItem('arfaaz_prod')) || [];
-        riwayat = JSON.parse(localStorage.getItem('arfaaz_riw')) || [];
-        refresh();
+        ambilSemuaData();
+        aktifkanSistemRealtime();
     };
 
-    function refresh() {
-        localStorage.setItem('arfaaz_prod', JSON.stringify(produk));
-        localStorage.setItem('arfaaz_riw', JSON.stringify(riwayat));
-        
-        const sel = document.getElementById('p-pilih'); 
-        const nilaiSebelumnya = sel.value;
-        sel.innerHTML = '<option value="">-- Pilih Produk --</option>';
-        
-        const tb = document.getElementById('t-gudang'); 
-        tb.innerHTML = '';
-        
-        produk.forEach(p => {
-            sel.innerHTML += `<option value="${p.id}">${p.nama}</option>`;
-            tb.innerHTML += `<tr><td><strong>${p.nama}</strong></td><td><span class="badge">${p.stok} Pcs</span></td><td>Rp${parseInt(p.harga).toLocaleString('id-ID')}</td><td><button class="btn btn-danger" style="padding:2px 6px;font-size:11px;" onclick="hapus('${p.id}')">🗑️</button></td></tr>`;
-        });
-        
-        sel.value = nilaiSebelumnya; 
-        cekHarga(); 
-        loadRiwayat();
+    async function ambilSemuaData() {
+        try {
+            const { data: dataProd, error: errProd } = await supabaseClient
+                .from('produk')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (!errProd) {
+                listProduk = dataProd || [];
+                refreshTampilan();
+            }
+        } catch (e) {
+            console.error(e);
+        }
     }
 
-    function loadRiwayat() {
-        const tgl = document.getElementById('filter-tanggal').value; 
-        const tbR = document.getElementById('t-riwayat'); 
-        tbR.innerHTML = ''; 
-        let labaTotal = 0;
+    function refreshTampilan() {
+        const sel = document.getElementById('p-pilih'); const nilaiSebelumnya = sel.value; 
+        sel.innerHTML = '<option value="">-- Pilih Produk --</option>';
+        const tb = document.getElementById('t-gudang'); tb.innerHTML = '';
         
-        const riwayatFilter = riwayat.filter(r => r.tanggal === tgl);
-        
-        if(riwayatFilter.length === 0) { 
-            tbR.innerHTML = '<tr><td colspan="4" style="text-align:center;color:gray;">Belum ada penjualan hari ini</td></tr>'; 
-        } else { 
-            riwayatFilter.forEach(row => { 
-                labaTotal += row.laba; 
-                tbR.innerHTML += `<tr><td><small style="color:gray;">${row.jam}</small></td><td><strong>${row.nama}</strong></td><td>${row.qty}</td><td style="color:green;font-weight:bold;">+Rp${row.laba.toLocaleString('id-ID')}</td></tr>`; 
-            }); 
-        } 
+        listProduk.forEach(p => {
+            sel.innerHTML += `<option value="${p.id}">${p.nama_barang}</option>`;
+            tb.innerHTML += `<tr><td><strong>${p.nama_barang}</strong></td><td><span class="badge">${p.stok} Pcs</span></td><td>Rp${parseInt(p.harga_jual).toLocaleString('id-ID')}</td><td><button class="btn btn-danger" style="padding:2px 6px;font-size:11px;" onclick="hapusBarang('${p.id}')">🗑️</button></td></tr>`;
+        });
+        sel.value = nilaiSebelumnya; cekHarga(); loadRiwayat();
+    }
+
+    async function loadRiwayat() {
+        const tgl = document.getElementById('filter-tanggal').value; const tbR = document.getElementById('t-riwayat'); tbR.innerHTML = ''; let labaTotal = 0;
+        try {
+            const { data: riwayatFilter, error } = await supabaseClient.from('riwayat_penjualan').select('*').eq('tanggal', tgl).order('id', { ascending: false });
+            if(!error && riwayatFilter) { 
+                riwayatFilter.forEach(row => { 
+                    labaTotal += parseFloat(row.laba); 
+                    tbR.innerHTML += `<tr><td><small style="color:gray;">${row.jam}</small></td><td><strong>${row.nama}</strong></td><td>${row.qty}</td><td style="color:green;font-weight:bold;">+Rp${parseInt(row.laba).toLocaleString('id-ID')}</td></tr>`; 
+                }); 
+            } else {
+                tbR.innerHTML = '<tr><td colspan="4" style="text-align:center;color:gray;">Belum ada penjualan hari ini</td></tr>';
+            }
+        } catch (e) {
+            tbR.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Gagal memuat riwayat</td></tr>';
+        }
         document.getElementById('lap-untung').innerText = "Rp" + labaTotal.toLocaleString('id-ID');
     }
 
-    function saveBarang(e) {
-        e.preventDefault(); 
-        const nama = document.getElementById('i-nama').value; 
-        const modal = parseInt(document.getElementById('i-modal').value) || 0; 
-        const harga = parseInt(document.getElementById('i-harga').value) || 0; 
-        const stok = parseInt(document.getElementById('i-stok').value) || 0;
-        
-        // Memasukkan data baru ke baris pertama array
-        produk.unshift({ id: Date.now().toString(), nama, modal, harga, stok }); 
-        document.getElementById('f-produk').reset(); 
-        refresh();
+    async function saveBarang(e) {
+        e.preventDefault(); const btnSave = document.getElementById('btn-save'); btnSave.innerText = "Menyimpan..."; btnSave.disabled = true;
+        const namaValue = document.getElementById('i-nama').value; 
+        const modalValue = parseInt(document.getElementById('i-modal').value) || 0; 
+        const hargaValue = parseInt(document.getElementById('i-harga').value) || 0; 
+        const stokValue = parseInt(document.getElementById('i-stok').value) || 0;
+
+        const { error } = await supabaseClient.from('produk').insert([{ nama_barang: namaValue, harga_modal: modalValue, harga_jual: hargaValue, stok: stokValue }]);
+        btnSave.innerText = "Simpan Masuk Gudang"; btnSave.disabled = false;
+
+        if (error) { alert("Gagal simpan barang: " + error.message); } else { document.getElementById('f-produk').reset(); ambilSemuaData(); }
     }
 
-    function hapus(id) { 
-        if(confirm("Hapus barang?")) { 
-            produk = produk.filter(p => p.id !== id); 
-            refresh(); 
+    async function hapusBarang(id) { 
+        if(confirm("Apakah Anda yakin ingin menghapus barang ini?")) { 
+            const { error } = await supabaseClient.from('produk').delete().eq('id', id);
+            if (!error) ambilSemuaData();
         } 
     }
 
     function cekHarga() { 
-        const id = document.getElementById('p-pilih').value; 
-        const p = produk.find(x => x.id === id); 
-        document.getElementById('t-stok').innerText = p ? p.stok : 0; 
-        document.getElementById('t-harga').innerText = p ? "Rp" + p.harga.toLocaleString('id-ID') : "Rp0"; 
+        const id = document.getElementById('p-pilih').value; const p = listProduk.find(x => x.id.toString() === id.toString()); 
+        document.getElementById('t-stok').innerText = p ? p.stok : 0; document.getElementById('t-harga').innerText = p ? "Rp" + parseInt(p.harga_jual).toLocaleString('id-ID') : "Rp0"; 
     }
 
-    function keKeranjang(e) {
-        e.preventDefault(); 
-        const id = document.getElementById('p-pilih').value; 
-        const qty = parseInt(document.getElementById('p-qty').value);
-        
-        if(!id) return alert("Pilih produk dulu!");
-        
-        const p = produk.find(x => x.id === id); 
-        if(!p) return;
-        
-        if(p.stok < qty) return alert("Stok gudang tidak mencukupi!");
-        
-        const totalLaba = (p.harga - p.modal) * qty;
-        const d = new Date();
-        const jam = d.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}).replace('.', ':');
-        const tgl = document.getElementById('filter-tanggal').value;
-
-        p.stok -= qty;
-        riwayat.unshift({ id: Date.now().toString(), produk_id: id, nama: p.nama, qty, laba: totalLaba, tanggal: tgl, jam });
-        
-        document.getElementById('p-qty').value = "1"; 
-        document.getElementById('p-pilih').value = ""; 
-        refresh();
-    }
-</script>
-</body>
-</html>
+    async function keKeranjang(e) {
+        e.preventDefault(); const id = document.getElementById('p-pilih').value; const qty = parseInt(document.getElementById('p-qty').value); const btnJual = document.getElementById('btn-jual');
