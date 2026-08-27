@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kasir Sembako Kedai Arfaaz</title>
-    <!-- MENGHUBUNGKAN LIBRARY SUPABASE VIA CDN -->
-    <script src="https://jsdelivr.net"></script>
+    <!-- 1. MEMANGGIL LIBRARY SUPABASE DENGAN BENAR -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f3f4f6;margin:0;padding:12px;color:#1f2937;}
         .container{max-width:800px;margin:0 auto;} .text-center{text-align:center;} .fw-bold{font-weight:bold;}
@@ -70,15 +70,16 @@
 
 <script>
     // DATA KUNCI SUPABASE ASLI MILIK KEDAI ARFAAZ
-    const SUPABASE_URL = "https://supabase.co";
+    const SUPABASE_URL = "https://mubhbbiiauzbqnnrawbd.supabase.co";
     const SUPABASE_KEY = "sb_publishable_vs-g2Pd_IFL5X8PVrApqTw_KdQTTAj0";
     
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // PERBAIKAN: Menggunakan inisialisasi objek global langsung (tanpa window.)
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let listProduk = [];
 
     window.onload = function() { 
-        // SUDAH DIPERBAIKI: Menggunakan [0] agar menghasilkan teks string tanggal murni 'YYYY-MM-DD'
+        // Mengeset format tanggal awal dengan string bersih YYYY-MM-DD
         document.getElementById('filter-tanggal').value = new Date().toISOString().split('T')[0]; 
         ambilSemuaData();
         aktifkanSistemRealtime();
@@ -86,18 +87,21 @@
 
     // MENGAMBIL DATA PRODUK DARI CLOUD SUPABASE
     async function ambilSemuaData() {
-        const { data: dataProd, error: errProd } = await supabaseClient
-            .from('produk')
-            .select('*')
-            .order('created_at', { ascending: false });
+        try {
+            const { data: dataProd, error: errProd } = await supabaseClient
+                .from('produk')
+                .select('*')
+                .order('created_at', { ascending: false });
 
-        if (!errProd) {
-            listProduk = dataProd || [];
-        } else {
-            console.error("Gagal ambil produk:", errProd.message);
+            if (!errProd) {
+                listProduk = dataProd || [];
+            } else {
+                console.error("Gagal ambil produk:", errProd.message);
+            }
+            refreshTampilan();
+        } catch (e) {
+            console.error("Terjadi error koneksi data:", e);
         }
-
-        refreshTampilan();
     }
 
     // MEMPERBARUI TAMPILAN TABEL STOK DAN DROPDOWN KASIR
@@ -126,20 +130,24 @@
         tbR.innerHTML = ''; 
         let labaTotal = 0;
 
-        const { data: riwayatFilter, error } = await supabaseClient
-            .from('riwayat_penjualan')
-            .select('*')
-            .eq('tanggal', tgl)
-            .order('id', { ascending: false });
+        try {
+            const { data: riwayatFilter, error } = await supabaseClient
+                .from('riwayat_penjualan')
+                .select('*')
+                .eq('tanggal', tgl)
+                .order('id', { ascending: false });
 
-        if(error || !riwayatFilter || riwayatFilter.length === 0) { 
-            tbR.innerHTML = '<tr><td colspan="4" style="text-align:center;color:gray;">Belum ada penjualan hari ini</td></tr>'; 
-        } else { 
-            riwayatFilter.forEach(row => { 
-                labaTotal += parseFloat(row.laba); 
-                tbR.innerHTML += `<tr><td><small style="color:gray;">${row.jam}</small></td><td><strong>${row.nama}</strong></td><td>${row.qty}</td><td style="color:green;font-weight:bold;">+Rp${parseInt(row.laba).toLocaleString('id-ID')}</td></tr>`; 
-            }); 
-        } 
+            if(error || !riwayatFilter || riwayatFilter.length === 0) { 
+                tbR.innerHTML = '<tr><td colspan="4" style="text-align:center;color:gray;">Belum ada penjualan hari ini</td></tr>'; 
+            } else { 
+                riwayatFilter.forEach(row => { 
+                    labaTotal += parseFloat(row.laba); 
+                    tbR.innerHTML += `<tr><td><small style="color:gray;">${row.jam}</small></td><td><strong>${row.nama}</strong></td><td>${row.qty}</td><td style="color:green;font-weight:bold;">+Rp${parseInt(row.laba).toLocaleString('id-ID')}</td></tr>`; 
+                }); 
+            } 
+        } catch (e) {
+            tbR.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Gagal memuat riwayat</td></tr>';
+        }
         document.getElementById('lap-untung').innerText = "Rp" + labaTotal.toLocaleString('id-ID');
     }
 
@@ -164,7 +172,7 @@
         btnSave.disabled = false;
 
         if (error) {
-            alert("Gagal simpan barang: " + error.message + "\n\nCatatan: Pastikan RLS di Supabase sudah dimatikan!");
+            alert("Gagal simpan barang: " + error.message);
         } else {
             document.getElementById('f-produk').reset();
             ambilSemuaData();
@@ -173,15 +181,6 @@
 
     // HAPUS PRODUK DARI DATABASE CLOUD
     async function hapusBarang(id) { 
-        if(confirm("Hapus barang?")) { 
+        if(confirm("Apakah Anda yakin ingin menghapus barang ini?")) { 
             const { error } = await supabaseClient.from('produk').delete().eq('id', id);
             if (error) alert("Gagal menghapus data: " + error.message);
-            else ambilSemuaData();
-        } 
-    }
-
-    // CEK HARGA DAN STOK SAAT KASIR MEMILIH BARANG
-    function cekHarga() { 
-        const id = document.getElementById('p-pilih').value; 
-        const p = listProduk.find(x => x.id.toString() === id.toString()); 
-        document.getElementById('t-stok').innerText = p ? p.stok : 0;
