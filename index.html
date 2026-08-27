@@ -30,7 +30,7 @@
 
     <div class="card">
         <div class="card-header" style="color:#065f46;">⚙️ 2. Input Barang</div>
-        <form onsubmit="simpan(event)">
+        <form id="f-produk" onsubmit="simpan(event)">
             <input type="text" id="i-nama" class="form-control" placeholder="Nama Barang" required>
             <input type="number" id="i-modal" class="form-control" placeholder="Harga Modal" required>
             <input type="number" id="i-harga" class="form-control" placeholder="Harga Jual" required>
@@ -41,7 +41,7 @@
 
     <div class="card">
         <div class="card-header">📋 Daftar Stok</div>
-        <table melon><thead><tr><th>Barang</th><th>Stok</th><th>Harga</th><th>Aksi</th></tr></thead><tbody id="t-gudang"></tbody></table>
+        <table><thead><tr><th>Barang</th><th>Stok</th><th>Harga</th><th>Aksi</th></tr></thead><tbody id="t-gudang"></tbody></table>
     </div>
 
     <div class="card">
@@ -85,10 +85,27 @@
     }
 
     async function simpan(e) {
-        e.preventDefault(); document.getElementById('b-simpan').disabled = true;
-        const n = document.getElementById('i-nama').value, m = parseInt(document.getElementById('i-modal').value), h = parseInt(document.getElementById('i-harga').value), s = parseInt(document.getElementById('i-stok').value);
-        await sb.from('produk').insert([{ nama_barang: n, harga_modal: m, harga_jual: h, stok: s }]);
-        document.getElementById('b-simpan').disabled = false; document.querySelector('#card form').reset(); muat();
+        e.preventDefault(); 
+        const btn = document.getElementById('b-simpan');
+        btn.innerText = "Menyimpan...";
+        btn.disabled = true;
+        
+        const n = document.getElementById('i-nama').value;
+        const m = parseInt(document.getElementById('i-modal').value);
+        const h = parseInt(document.getElementById('i-harga').value);
+        const s = parseInt(document.getElementById('i-stok').value);
+        
+        const { error } = await sb.from('produk').insert([{ nama_barang: n, harga_modal: m, harga_jual: h, stok: s }]);
+        
+        btn.innerText = "Simpan Masuk Gudang"; 
+        btn.disabled = false;
+        
+        if (error) {
+            alert("Gagal menyimpan ke cloud: " + error.message);
+        } else {
+            document.getElementById('f-produk').reset(); // FIX: Reset formulir menggunakan ID f-produk yang benar
+            muat();
+        }
     }
 
     async function jual(e) {
