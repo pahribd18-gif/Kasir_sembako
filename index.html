@@ -1,198 +1,110 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Sembako Kedai Arfaaz</title>
-    <!-- PEMANGGILAN UTAMA LIBRARY CLOUD SUPABASE -->
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kasir Kedai Arfaaz</title>
     <script src="https://jsdelivr.net"></script>
     <style>
-        body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f3f4f6;margin:0;padding:12px;color:#1f2937;}
-        .container{max-width:800px;margin:0 auto;} .text-center{text-align:center;} 
-        .card{background:#fff;border-radius:10px;padding:15px;margin-bottom:15px;box-shadow:0 2px 4px rgba(0,0,0,0.05);}
-        .card-header{font-weight:bold;font-size:16px;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #e5e7eb;color:#1e3a8a;}
-        .form-group{margin-bottom:10px;} .form-group label{display:block;margin-bottom:4px;font-size:13px;font-weight:600;}
-        .form-control{width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;font-size:14px;}
-        .btn{display:block;width:100%;padding:10px;border:none;border-radius:6px;font-weight:bold;font-size:14px;cursor:pointer;text-align:center;}
-        .btn-success{background:#10b981;color:#fff;} .btn-primary{background:#3b82f6;color:#fff;} .btn-danger{background:#ef4444;color:#fff;}
-        table{width:100%;border-collapse:collapse;margin-top:5px;font-size:13px;} th,td{border:1px solid #e5e7eb;padding:8px;text-align:left;} th{background:#f3f4f6;}
-        .badge{padding:3px 6px;border-radius:4px;font-size:11px;font-weight:bold;color:#fff;background:#6b7280;}
-        .badge-card{padding:12px;border-radius:8px;color:#fff;text-align:center;margin-bottom:10px;background:#2563eb;}
+        body{font-family:sans-serif; background:#f3f4f6; padding:12px; color:#1f2937;}
+        .card{background:#fff; border-radius:8px; padding:12px; margin-bottom:12px; box-shadow:0 2px 4px rgba(0,0,0,0.05);}
+        .card-header{font-weight:bold; margin-bottom:8px; color:#1e3a8a;}
+        .form-control{width:100%; padding:8px; margin-bottom:8px; border:1px solid #d1d5db; border-radius:6px; box-sizing:border-box;}
+        .btn{width:100%; padding:10px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;}
+        .btn-p{background:#3b82f6; color:#fff;} .btn-s{background:#10b981; color:#fff;} .btn-d{background:#ef4444; color:#fff;}
+        table{width:100%; border-collapse:collapse; font-size:13px;} th,td{border:1px solid #e5e7eb; padding:6px; text-align:left;} th{background:#f3f4f6;}
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="text-center" style="margin-bottom:15px;">
-        <h3 style="margin:5px 0 0 0;color:#1e3a8a;">🏪 KEDAI ARFAAZ</h3>
-        <p style="margin:2px 0;font-size:12px;color:#6b7280;">Sistem Kasir &amp; Stok Gudang Digital Mandiri (Realtime)</p>
-    </div>
+<div style="max-width:600px; margin:0 auto;">
+    <h3 style="text-align:center; color:#1e3a8a; margin:5px;">🏪 KEDAI ARFAAZ</h3>
     
-    <!-- 1. KASIR TRANSAKSI -->
-    <div class="card" style="background:#eff6ff;border-left:4px solid #2563eb;">
-        <div class="card-header">🛒 1. Menu Kasir Jualan</div>
-        <form onsubmit="keKeranjang(event)">
-            <div style="display:flex;gap:10px;margin-bottom:8px;">
-                <div style="flex:2;"><select id="p-pilih" class="form-control" onchange="cekHarga()" required></select></div>
-                <div style="flex:1;"><input type="number" id="p-qty" class="form-control" min="1" value="1"></div>
-                <div style="flex:1;"><button type="submit" id="btn-jual" class="btn btn-primary" style="padding:8px;">Jual</button></div>
-            </div>
+    <div class="card" style="background:#eff6ff;">
+        <div class="card-header">🛒 1. Kasir</div>
+        <form onsubmit="jual(event)">
+            <select id="p-pilih" class="form-control" onchange="cek()" required></select>
+            <input type="number" id="p-qty" class="form-control" min="1" value="1">
+            <button type="submit" id="b-jual" class="btn btn-p">Jual</button>
         </form>
-        <div style="font-size:12px;font-weight:bold;color:#1e40af;">Stok Gudang: <span id="t-stok" class="badge" style="background:#f59e0b;color:#000;">0</span> | Harga Jual: <span id="t-harga" class="badge" style="background:#f3f4f6;color:#1e3a8a;">Rp0</span></div>
+        <div style="font-size:12px; margin-top:5px;">Stok: <span id="t-stok">0</span> | Harga: <span id="t-harga">Rp0</span></div>
     </div>
-    
-    <!-- 2. ATUR STOK -->
+
     <div class="card">
-        <div class="card-header" style="color:#065f46;">⚙️ 2. Input / Edit Produk Baru</div>
-        <form id="f-produk" onsubmit="saveBarang(event)">
-            <div class="form-group"><label>Nama Barang</label><input type="text" id="i-nama" class="form-control" required></div>
-            <div class="form-group"><label>Harga Modal</label><input type="number" id="i-modal" class="form-control" required></div>
-            <div class="form-group"><label>Harga Jual</label><input type="number" id="i-harga" class="form-control" required></div>
-            <div class="form-group"><label>Jumlah Stok Gudang</label><input type="number" id="i-stok" class="form-control" required></div>
-            <button type="submit" class="btn btn-success" id="btn-save">Simpan Masuk Gudang</button>
+        <div class="card-header" style="color:#065f46;">⚙️ 2. Input Barang</div>
+        <form onsubmit="simpan(event)">
+            <input type="text" id="i-nama" class="form-control" placeholder="Nama Barang" required>
+            <input type="number" id="i-modal" class="form-control" placeholder="Harga Modal" required>
+            <input type="number" id="i-harga" class="form-control" placeholder="Harga Jual" required>
+            <input type="number" id="i-stok" class="form-control" placeholder="Stok" required>
+            <button type="submit" id="b-simpan" class="btn btn-s">Simpan Masuk Gudang</button>
         </form>
     </div>
-    
-    <!-- 3. DETAIL STOK & TRANSAKSI -->
+
     <div class="card">
-        <div class="card-header" style="color:#4b5563;">📋 Master Daftar Stok Sembako Gudang</div>
-        <div style="overflow-x:auto;"><table><thead><tr><th>Nama Barang</th><th>Stok</th><th>Harga</th><th>Hapus</th></tr></thead><tbody id="t-gudang"></tbody></table></div>
+        <div class="card-header">📋 Daftar Stok</div>
+        <table melon><thead><tr><th>Barang</th><th>Stok</th><th>Harga</th><th>Aksi</th></tr></thead><tbody id="t-gudang"></tbody></table>
     </div>
-    
+
     <div class="card">
-        <div class="card-header" style="color:#b91c1c;">📊 3. Laporan Keuntungan &amp; Riwayat Harian</div>
-        <div class="form-group"><input type="date" id="filter-tanggal" class="form-control" onchange="loadRiwayat()"></div>
-        <div class="badge-card" style="background:#10b981;"><h6>📈 Total Keuntungan Bersih (Laba)</h6><h4 id="lap-untung" style="margin:5px 0 0 0;">Rp0</h4></div>
-        <div style="overflow-x:auto;"><table><thead><tr><th>Waktu</th><th>Nama Barang</th><th>Qty</th><th>Keuntungan</th></tr></thead><tbody id="t-riwayat"></tbody></table></div>
+        <div class="card-header" style="color:#b91c1c;">📊 3. Laporan Laba Hari Ini</div>
+        <div style="background:#10b981; color:#fff; padding:10px; border-radius:6px; text-align:center; margin-bottom:8px;">
+            <h4 id="lap-untung" style="margin:0;">Rp0</h4>
+        </div>
+        <table><thead><tr><th>Jam</th><th>Barang</th><th>Qty</th><th>Laba</th></tr></thead><tbody id="t-riwayat"></tbody></table>
     </div>
 </div>
 
 <script>
-    const SUPABASE_URL = "https://supabase.co";
-    const SUPABASE_KEY = "sb_publishable_vs-g2Pd_IFL5X8PVrApqTw_KdQTTAj0";
-    
-    // INTEGRASI VERCEL BYPASS HEADERS
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-        auth: {
-            persistSession: false,
-            autoRefreshToken: false,
-            detectSessionInUrl: false
-        },
-        global: {
-            headers: { 'X-Client-Info': 'supabase-js' }
-        }
-    });
+    const url = "https://supabase.co";
+    const key = "sb_publishable_vs-g2Pd_IFL5X8PVrApqTw_KdQTTAj0";
+    const sb = supabase.createClient(url, key, { auth: { persistSession: false } });
+    let produk = [];
 
-    let listProduk = [];
+    window.onload = () => { muat(); rtime(); };
 
-    window.onload = function() { 
-        const d = new Date();
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        document.getElementById('filter-tanggal').value = `${yyyy}-${mm}-${dd}`;
+    async function muat() {
+        const { data } = await sb.from('produk').select('*').order('created_at', { ascending: false });
+        produk = data || [];
+        const sel = document.getElementById('p-pilih'); sel.innerHTML = '<option value="">-- Pilih --</option>';
+        const tg = document.getElementById('t-gudang'); tg.innerHTML = '';
         
-        ambilSemuaData();
-        aktifkanSistemRealtime();
-    };
-
-    async function ambilSemuaData() {
-        try {
-            const { data: dataProd, error: errProd } = await supabaseClient
-                .from('produk')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (!errProd) {
-                listProduk = dataProd || [];
-                refreshTampilan();
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
-    function refreshTampilan() {
-        const sel = document.getElementById('p-pilih'); const nilaiSebelumnya = sel.value; 
-        sel.innerHTML = '<option value="">-- Pilih Produk --</option>';
-        const tb = document.getElementById('t-gudang'); tb.innerHTML = '';
-        
-        listProduk.forEach(p => {
+        produk.forEach(p => {
             sel.innerHTML += `<option value="${p.id}">${p.nama_barang}</option>`;
-            tb.innerHTML += `<tr><td><strong>${p.nama_barang}</strong></td><td><span class="badge">${p.stok} Pcs</span></td><td>Rp${parseInt(p.harga_jual).toLocaleString('id-ID')}</td><td><button class="btn btn-danger" style="padding:2px 6px;font-size:11px;" onclick="hapusBarang('${p.id}')">🗑️</button></td></tr>`;
+            tg.innerHTML += `<tr><td><b>${p.nama_barang}</b></td><td>${p.stok} Pcs</td><td>Rp${parseInt(p.harga_jual).toLocaleString()}</td><td><button class="btn btn-d" style="padding:2px 6px; font-size:11px; width:auto;" onclick="hapus('${p.id}')">🗑️</button></td></tr>`;
         });
-        sel.value = nilaiSebelumnya; cekHarga(); loadRiwayat();
+        cek(); riwayat();
     }
 
-    async function loadRiwayat() {
-        const tgl = document.getElementById('filter-tanggal').value; const tbR = document.getElementById('t-riwayat'); tbR.innerHTML = ''; let labaTotal = 0;
-        try {
-            const { data: riwayatFilter, error } = await supabaseClient.from('riwayat_penjualan').select('*').eq('tanggal', tgl).order('id', { ascending: false });
-            if(!error && riwayatFilter) { 
-                riwayatFilter.forEach(row => { 
-                    labaTotal += parseFloat(row.laba); 
-                    tbR.innerHTML += `<tr><td><small style="color:gray;">${row.jam}</small></td><td><strong>${row.nama}</strong></td><td>${row.qty}</td><td style="color:green;font-weight:bold;">+Rp${parseInt(row.laba).toLocaleString('id-ID')}</td></tr>`; 
-                }); 
-            } else {
-                tbR.innerHTML = '<tr><td colspan="4" style="text-align:center;color:gray;">Belum ada penjualan hari ini</td></tr>';
-            }
-        } catch (e) {
-            tbR.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Gagal memuat riwayat</td></tr>';
+    async function riwayat() {
+        const tgl = new Date().toISOString().split('T')[0];
+        const { data } = await sb.from('riwayat_penjualan').select('*').eq('tanggal', tgl).order('id', { ascending: false });
+        const tr = document.getElementById('t-riwayat'); tr.innerHTML = ''; let total = 0;
+        if(data) {
+            data.forEach(r => { total += parseFloat(r.laba); tr.innerHTML += `<tr><td><small>${r.jam}</small></td><td>${r.nama}</td><td>${r.qty}</td><td style="color:green; font-weight:bold;">+Rp${parseInt(r.laba).toLocaleString()}</td></tr>`; });
         }
-        document.getElementById('lap-untung').innerText = "Rp" + labaTotal.toLocaleString('id-ID');
+        document.getElementById('lap-untung').innerText = "Rp" + total.toLocaleString();
     }
 
-    async function saveBarang(e) {
-        e.preventDefault(); const btnSave = document.getElementById('btn-save'); btnSave.innerText = "Menyimpan..."; btnSave.disabled = true;
-        const namaValue = document.getElementById('i-nama').value; 
-        const modalValue = parseInt(document.getElementById('i-modal').value) || 0; 
-        const hargaValue = parseInt(document.getElementById('i-harga').value) || 0; 
-        const stokValue = parseInt(document.getElementById('i-stok').value) || 0;
-
-        const { error } = await supabaseClient.from('produk').insert([{ nama_barang: namaValue, harga_modal: modalValue, harga_jual: hargaValue, stok: stokValue }]);
-        btnSave.innerText = "Simpan Masuk Gudang"; btnSave.disabled = false;
-
-        if (error) { alert("Gagal simpan barang: " + error.message); } else { document.getElementById('f-produk').reset(); ambilSemuaData(); }
+    async function simpan(e) {
+        e.preventDefault(); document.getElementById('b-simpan').disabled = true;
+        const n = document.getElementById('i-nama').value, m = parseInt(document.getElementById('i-modal').value), h = parseInt(document.getElementById('i-harga').value), s = parseInt(document.getElementById('i-stok').value);
+        await sb.from('produk').insert([{ nama_barang: n, harga_modal: m, harga_jual: h, stok: s }]);
+        document.getElementById('b-simpan').disabled = false; document.querySelector('#card form').reset(); muat();
     }
 
-    async function hapusBarang(id) { 
-        if(confirm("Apakah Anda yakin ingin menghapus barang ini?")) { 
-            const { error } = await supabaseClient.from('produk').delete().eq('id', id);
-            if (!error) ambilSemuaData();
-        } 
-    }
-
-    function cekHarga() { 
-        const id = document.getElementById('p-pilih').value; const p = listProduk.find(x => x.id.toString() === id.toString()); 
-        document.getElementById('t-stok').innerText = p ? p.stok : 0; document.getElementById('t-harga').innerText = p ? "Rp" + parseInt(p.harga_jual).toLocaleString('id-ID') : "Rp0"; 
-    }
-
-    async function keKeranjang(e) {
-        e.preventDefault(); const id = document.getElementById('p-pilih').value; const qty = parseInt(document.getElementById('p-qty').value); const btnJual = document.getElementById('btn-jual');
-        if(!id) return alert("Pilih produk dulu!"); 
-        const p = listProduk.find(x => x.id.toString() === id.toString()); 
-        if(!p || p.stok < qty) return alert("Stok gudang tidak mencukupi!");
+    async function jual(e) {
+        e.preventDefault(); const id = document.getElementById('p-pilih').value, qty = parseInt(document.getElementById('p-qty').value);
+        if(!id) return; const p = produk.find(x => x.id.toString() === id.toString()); if(!p || p.stok < qty) return alert("Stok kurang!");
+        document.getElementById('b-jual').disabled = true;
         
-        btnJual.innerText = "..."; 
-        btnJual.disabled = true;
-        
-        const d = new Date(); 
-        const jamSekarang = d.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}).replace('.', ':');
-        const tglSekarang = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; 
-
-        const { error: errUpdate } = await supabaseClient.from('produk').update({ stok: p.stok - qty }).eq('id', id);
-        if(!errUpdate) {
-            await supabaseClient.from('riwayat_penjualan').insert([{ produk_id: id.toString(), nama: p.nama_barang, qty: qty, laba: (p.harga_jual - p.harga_modal) * qty, tanggal: tglSekarang, jam: jamSekarang }]);
-            document.getElementById('p-qty').value = "1"; 
-            document.getElementById('p-pilih').value = ""; 
-            ambilSemuaData();
-        }
-        btnJual.innerText = "Jual"; 
-        btnJual.disabled = false;
+        const d = new Date(), jam = d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}).replace('.',':'), tgl = d.toISOString().split('T')[0];
+        await sb.from('produk').update({ stok: p.stok - qty }).eq('id', id);
+        await sb.from('riwayat_penjualan').insert([{ produk_id: id.toString(), nama: p.nama_barang, qty: qty, laba: (p.harga_jual - p.harga_modal) * qty, tanggal: tgl, jam: jam }]);
+        document.getElementById('b-jual').disabled = false; document.getElementById('p-qty').value = "1"; muat();
     }
 
-    function aktifkanSistemRealtime() {
-        supabaseClient.channel('realtime-kedai').on('postgres_changes', { event: '*', schema: 'public', table: 'produk' }, () => { ambilSemuaData(); }).on('postgres_changes', { event: '*', schema: 'public', table: 'riwayat_penjualan' }, () => { loadRiwayat(); }).subscribe();
-    }
+    async function hapus(id) { if(confirm("Hapus?")) { await sb.from('produk').delete().eq('id', id); muat(); } }
+    function cek() { const id = document.getElementById('p-pilih').value, p = produk.find(x => x.id.toString() === id.toString()); document.getElementById('t-stok').innerText = p ? p.stok : 0; document.getElementById('t-harga').innerText = p ? "Rp" + parseInt(p.harga_jual).toLocaleString() : "Rp0"; }
+    function rtime() { sb.channel('kedai').on('postgres_changes', { event: '*', schema: 'public', table: 'produk' }, () => muat()).on('postgres_changes', { event: '*', schema: 'public', table: 'riwayat_penjualan' }, () => riwayat()).subscribe(); }
 </script>
 </body>
 </html>
