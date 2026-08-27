@@ -25,7 +25,7 @@
 <div class="container">
     <div class="text-center" style="margin-bottom:15px;">
         <h3 style="margin:5px 0 0 0;color:#1e3a8a;">🏪 KEDAI ARFAAZ</h3>
-        <p style="margin:2px 0;font-size:12px;color:#6b7280;">Sistem Kasir &amp; Stok Gudang Digital Mandiri</p>
+        <p style="margin:2px 0;font-size:12px;color:#6b7280;">Sistem Kasir &amp; Stok Gudang Digital Mandiri (Realtime)</p>
     </div>
     
     <!-- 1. KASIR TRANSAKSI -->
@@ -79,8 +79,12 @@
     let listProduk = [];
 
     window.onload = function() { 
-        // FIX BERHASIL: Menambahkan [0] agar menghasilkan teks string tanggal 'YYYY-MM-DD'
-        document.getElementById('filter-tanggal').value = new Date().toISOString().split('T')[0]; 
+        const d = new Date();
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        document.getElementById('filter-tanggal').value = `${yyyy}-${mm}-${dd}`;
+        
         ambilSemuaData();
         aktifkanSistemRealtime();
     };
@@ -94,12 +98,12 @@
 
             if (!errProd) {
                 listProduk = dataProd || [];
+                refreshTampilan();
             } else {
-                alert("Supabase Gagal Memuat Data: " + errProd.message);
+                console.error("Gagal ambil produk:", errProd.message);
             }
-            refreshTampilan();
         } catch (e) {
-            console.error("Gagal melakukan penarikan data awal:", e);
+            console.error(e);
         }
     }
 
@@ -155,20 +159,25 @@
         btnSave.innerText = "Menyimpan...";
         btnSave.disabled = true;
 
-        const nama = document.getElementById('i-nama').value; 
-        const modal = parseInt(document.getElementById('i-modal').value) || 0; 
-        const harga = parseInt(document.getElementById('i-harga').value) || 0; 
-        const dtStok = parseInt(document.getElementById('i-stok').value) || 0;
+        const namaValue = document.getElementById('i-nama').value; 
+        const modalValue = parseInt(document.getElementById('i-modal').value) || 0; 
+        const hargaValue = parseInt(document.getElementById('i-harga').value) || 0; 
+        const stokValue = parseInt(document.getElementById('i-stok').value) || 0;
 
         const { error } = await supabaseClient
             .from('produk')
-            .insert([{ nama_barang: nama, harga_modal: modal, harga_jual: harga, stok: dtStok }]);
+            .insert([{ 
+                nama_barang: namaValue, 
+                harga_modal: modalValue, 
+                harga_jual: hargaValue, 
+                stok: stokValue 
+            }]);
 
         btnSave.innerText = "Simpan Masuk Gudang";
         btnSave.disabled = false;
 
         if (error) {
-            alert("Gagal menyimpan ke server: " + error.message + "\nKode Error: " + error.code);
+            alert("Gagal simpan barang: " + error.message);
         } else {
             document.getElementById('f-produk').reset();
             ambilSemuaData();
@@ -183,6 +192,4 @@
         } 
     }
 
-    function cekHarga() { 
-        const id = document.getElementById('p-pilih').value; 
-        const p = listProduk.find(x => x.id.toString() === id.toString());
+    function cekHarga() {
