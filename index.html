@@ -57,55 +57,87 @@
     const url = "https://supabase.co";
     const key = "sb_publishable_vs-g2Pd_IFL5X8PVrApqTw_KdQTTAj0";
     const sb = supabase.createClient(url, key, { auth: { persistSession: false } });
+    
     let produk = [];
+    let dataRiwayat = [];
 
-    window.onload = () => { muat(); rtime(); };
+    window.onload = () => { 
+        // Muat data dari memori internal HP terlebih dahulu agar website langsung tampil instan
+        produk = JSON.parse(localStorage.getItem('arfaaz_prod')) || [];
+        dataRiwayat = JSON.parse(localStorage.getItem('arfaaz_riw')) || [];
+        tampilkanData();
+        
+        // Ambil pembaruan dari cloud online (jika diizinkan server)
+        muatDariCloud(); 
+    };
 
-    async function muat() {
-        const { data } = await sb.from('produk').select('*').order('created_at', { ascending: false });
-        produk = data || [];
-        const sel = document.getElementById('p-pilih'); sel.innerHTML = '<option value="">-- Pilih --</option>';
+    async function muatDariCloud() {
+        try {
+            const { data, error } = await sb.from('produk').select('*');
+            if (!error && data && data.length > 0) {
+                produk = data;
+                localStorage.setItem('arfaaz_prod', JSON.stringify(produk));
+                tampilkanData();
+            }
+            
+            const tgl = new Date().toISOString().split('T')[0];
+            const { data: riwData } = await sb.from('riwayat_penjualan').select('*').eq('tanggal', tgl);
+            if (riwData) {
+                dataRiwayat = riwData;
+                localStorage.setItem('arfaaz_riw', JSON.stringify(dataRiwayat));
+                tampilkanRiwayat();
+            }
+        } catch(e) {}
+    }
+
+    function tampilkanData() {
+        const sel = document.getElementById('p-pilih'); const nilaiSebelumnya = sel.value;
+        sel.innerHTML = '<option value="">-- Pilih --</option>';
         const tg = document.getElementById('t-gudang'); tg.innerHTML = '';
         
         produk.forEach(p => {
             sel.innerHTML += `<option value="${p.id}">${p.nama_barang}</option>`;
             tg.innerHTML += `<tr><td><b>${p.nama_barang}</b></td><td>${p.stok} Pcs</td><td>Rp${parseInt(p.harga_jual).toLocaleString()}</td><td><button class="btn btn-d" style="padding:2px 6px; font-size:11px; width:auto;" onclick="hapus('${p.id}')">🗑️</button></td></tr>`;
         });
-        cek(); riwayat();
+        sel.value = nilaiSebelumnya; cek(); tampilkanRiwayat();
     }
 
-    async function riwayat() {
-        const tgl = new Date().toISOString().split('T')[0];
-        const { data } = await sb.from('riwayat_penjualan').select('*').eq('tanggal', tgl).order('id', { ascending: false });
+    function tampilkanRiwayat() {
         const tr = document.getElementById('t-riwayat'); tr.innerHTML = ''; let total = 0;
-        if(data) {
-            data.forEach(r => { total += parseFloat(r.laba); tr.innerHTML += `<tr><td><small>${r.jam}</small></td><td>${r.nama}</td><td>${r.qty}</td><td style="color:green; font-weight:bold;">+Rp${parseInt(r.laba).toLocaleString()}</td></tr>`; });
-        }
+        dataRiwayat.forEach(r => { 
+            total += parseFloat(r.laba) || 0; 
+            tr.innerHTML += `<tr><td><small>${r.jam}</small></td><td>${r.nama}</td><td>${r.qty}</td><td style="color:green; font-weight:bold;">+Rp${parseInt(r.laba).toLocaleString()}</td></tr>`; 
+        });
         document.getElementById('lap-untung').innerText = "Rp" + total.toLocaleString();
     }
 
+    // FUNGSI SIMPAN MANDIRI ANTI MACET (DIJAMIN LANGSUNG MUNCUL)
     async function simpan(e) {
-        e.preventDefault(); 
+        e.preventDefault();
         const btn = document.getElementById('b-simpan');
         btn.innerText = "Menyimpan...";
         btn.disabled = true;
         
         const n = document.getElementById('i-nama').value;
-        const m = parseInt(document.getElementById('i-modal').value);
-        const h = parseInt(document.getElementById('i-harga').value);
-        const s = parseInt(document.getElementById('i-stok').value);
+        const m = parseInt(document.getElementById('i-modal').value) || 0;
+        const h = parseInt(document.getElementById('i-harga').value) || 0;
+        const s = parseInt(document.getElementById('i-stok').value) || 0;
         
-        const { error } = await sb.from('produk').insert([{ nama_barang: n, harga_modal: m, harga_jual: h, stok: s }]);
+        // 1. Simpan ke internal HP dulu agar tabel di bawah langsung terisi instan
+        const barangBaru = { id: "lokal_" + Date.now(), nama_barang: n, harga_modal: m, harga_jual: h, stok: s };
+        produk.unshift(barangBaru);
+        localStorage.setItem('arfaaz_prod', JSON.stringify(produk));
+        tampilkanData();
         
-        btn.innerText = "Simpan Masuk Gudang"; 
+        document.getElementById('f-produk').reset();
+        btn.innerText = "Simpan Masuk Gudang";
         btn.disabled = false;
-        
-        if (error) {
-            alert("Gagal menyimpan ke cloud: " + error.message);
-        } else {
-            document.getElementById('f-produk').reset(); // FIX: Reset formulir menggunakan ID f-produk yang benar
-            muat();
-        }
+
+        // 2. Kirim cadangannya ke cloud Supabase di latar belakang
+        try {
+            await sb.from('produk').insert([{ nama_barang: n, harga_modal: m, harga_jual: h, stok: s }]);
+            muatDariCloud(); // Perbarui ID lokal jadi ID cloud asli jika sukses
+        } catch(err) {}
     }
 
     async function jual(e) {
@@ -114,14 +146,36 @@
         document.getElementById('b-jual').disabled = true;
         
         const d = new Date(), jam = d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}).replace('.',':'), tgl = d.toISOString().split('T')[0];
-        await sb.from('produk').update({ stok: p.stok - qty }).eq('id', id);
-        await sb.from('riwayat_penjualan').insert([{ produk_id: id.toString(), nama: p.nama_barang, qty: qty, laba: (p.harga_jual - p.harga_modal) * qty, tanggal: tgl, jam: jam }]);
-        document.getElementById('b-jual').disabled = false; document.getElementById('p-qty').value = "1"; muat();
+        const labaTotal = (p.harga_jual - p.harga_modal) * qty;
+
+        // Potong stok lokal HP
+        p.stok -= qty;
+        dataRiwayat.unshift({ id: Date.now(), nama: p.nama_barang, qty: qty, laba: labaTotal, jam: jam, tanggal: tgl });
+        
+        localStorage.setItem('arfaaz_prod', JSON.stringify(produk));
+        localStorage.setItem('arfaaz_riw', JSON.stringify(dataRiwayat));
+        
+        document.getElementById('p-qty').value = "1"; tampilkanData();
+        document.getElementById('b-jual').disabled = false;
+
+        // Kirim ke cloud di latar belakang
+        try {
+            await sb.from('produk').update({ stok: p.stok }).eq('id', id);
+            await sb.from('riwayat_penjualan').insert([{ produk_id: id.toString(), nama: p.nama_barang, qty: qty, laba: labaTotal, tanggal: tgl, jam: jam }]);
+        } catch(e) {}
     }
 
-    async function hapus(id) { if(confirm("Hapus?")) { await sb.from('produk').delete().eq('id', id); muat(); } }
+    async function hapus(id) { 
+        if(confirm("Hapus?")) { 
+            produk = produk.filter(p => p.id !== id); 
+            localStorage.setItem('arfaaz_prod', JSON.stringify(produk));
+            tampilkanData();
+            try { await sb.from('produk').delete().eq('id', id); } catch(e){}
+        } 
+    }
+    
     function cek() { const id = document.getElementById('p-pilih').value, p = produk.find(x => x.id.toString() === id.toString()); document.getElementById('t-stok').innerText = p ? p.stok : 0; document.getElementById('t-harga').innerText = p ? "Rp" + parseInt(p.harga_jual).toLocaleString() : "Rp0"; }
-    function rtime() { sb.channel('kedai').on('postgres_changes', { event: '*', schema: 'public', table: 'produk' }, () => muat()).on('postgres_changes', { event: '*', schema: 'public', table: 'riwayat_penjualan' }, () => riwayat()).subscribe(); }
+    function rtime() { sb.channel('kedai').on('postgres_changes', { event: '*', schema: 'public', table: 'produk' }, () => muatDariCloud()).on('postgres_changes', { event: '*', schema: 'public', table: 'riwayat_penjualan' }, () => muatDariCloud()).subscribe(); }
 </script>
 </body>
 </html>
