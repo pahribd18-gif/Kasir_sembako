@@ -72,18 +72,14 @@
     const SUPABASE_URL = "https://supabase.co";
     const SUPABASE_KEY = "sb_publishable_vs-g2Pd_IFL5X8PVrApqTw_KdQTTAj0";
     
-    // PERBAIKAN: Menambahkan opsi tambahan untuk mematikan pelacakan sesi login (bypass pengunci jaringan)
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-        auth: {
-            persistSession: false,
-            autoRefreshToken: false,
-            detectSessionInUrl: false
-        }
+        auth: { persistSession: false }
     });
 
     let listProduk = [];
 
     window.onload = function() { 
+        // FIX BERHASIL: Menambahkan [0] agar menghasilkan teks string tanggal 'YYYY-MM-DD'
         document.getElementById('filter-tanggal').value = new Date().toISOString().split('T')[0]; 
         ambilSemuaData();
         aktifkanSistemRealtime();
@@ -99,11 +95,11 @@
             if (!errProd) {
                 listProduk = dataProd || [];
             } else {
-                console.error("Gagal ambil produk:", errProd.message);
+                alert("Supabase Gagal Memuat Data: " + errProd.message);
             }
             refreshTampilan();
         } catch (e) {
-            console.error("Terjadi error koneksi data:", e);
+            console.error("Gagal melakukan penarikan data awal:", e);
         }
     }
 
@@ -160,9 +156,9 @@
         btnSave.disabled = true;
 
         const nama = document.getElementById('i-nama').value; 
-        const modal = parseInt(document.getElementById('i-modal').value); 
-        const harga = parseInt(document.getElementById('i-harga').value); 
-        const dtStok = parseInt(document.getElementById('i-stok').value);
+        const modal = parseInt(document.getElementById('i-modal').value) || 0; 
+        const harga = parseInt(document.getElementById('i-harga').value) || 0; 
+        const dtStok = parseInt(document.getElementById('i-stok').value) || 0;
 
         const { error } = await supabaseClient
             .from('produk')
@@ -172,7 +168,7 @@
         btnSave.disabled = false;
 
         if (error) {
-            alert("Gagal simpan barang: " + error.message);
+            alert("Gagal menyimpan ke server: " + error.message + "\nKode Error: " + error.code);
         } else {
             document.getElementById('f-produk').reset();
             ambilSemuaData();
