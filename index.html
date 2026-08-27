@@ -3,50 +3,54 @@
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kasir Sembako Kedai Arfaaz</title>
+    <!-- MENGHUBUNGKAN LIBRARY SUPABASE RESMI -->
+    <script src="https://jsdelivr.net"></script>
     <style>
-        body{font-family:sans-serif; background:#f3f4f6; padding:12px; color:#1f2937;}
+        body{font-family:-apple-system,BlinkMacSystemFont,sans-serif; background:#f3f4f6; padding:12px; color:#1f2937;}
         .card{background:#fff; border-radius:8px; padding:12px; margin-bottom:12px; box-shadow:0 2px 4px rgba(0,0,0,0.05);}
         .card-header{font-weight:bold; margin-bottom:8px; color:#1e3a8a;}
         .form-control{width:100%; padding:8px; margin-bottom:8px; border:1px solid #d1d5db; border-radius:6px; box-sizing:border-box;}
-        .btn{width:100%; padding:10px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;}
+        .btn{width:100%; padding:10px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; text-align:center; display:block;}
         .btn-p{background:#3b82f6; color:#fff;} .btn-s{background:#10b981; color:#fff;} .btn-d{background:#ef4444; color:#fff;}
         table{width:100%; border-collapse:collapse; font-size:13px;} th,td{border:1px solid #e5e7eb; padding:6px; text-align:left;} th{background:#f3f4f6;}
+        .badge{padding:3px 6px; border-radius:4px; font-size:11px; font-weight:bold; color:#fff; background:#6b7280;}
     </style>
 </head>
 <body>
 <div style="max-width:600px; margin:0 auto;">
     <h3 style="text-align:center; color:#1e3a8a; margin:5px;">🏪 KEDAI ARFAAZ</h3>
+    <p style="text-align:center; font-size:11px; margin:0 0 10px 0; color:gray;">Sistem Otomatis Sinkron Antar-HP (Real-time)</p>
     
+    <!-- 1. KASIR TRANSAKSI -->
     <div class="card" style="background:#eff6ff;">
         <div class="card-header">🛒 1. Kasir</div>
         <form onsubmit="jual(event)">
             <select id="p-pilih" class="form-control" onchange="cek()" required></select>
             <input type="number" id="p-qty" class="form-control" min="1" value="1">
-            <button type="submit" class="btn btn-p">Jual</button>
+            <button type="submit" id="b-jual" class="btn btn-p">Jual</button>
         </form>
-        <div style="font-size:12px; margin-top:5px;">Stok: <span id="t-stok">0</span> | Harga: <span id="t-harga">Rp0</span></div>
+        <div style="font-size:12px; margin-top:5px;">Stok: <span id="t-stok" class="badge" style="background:#f59e0b; color:#000;">0</span> | Harga: <span id="t-harga" class="badge" style="background:#f3f4f6; color:#1e3a8a;">Rp0</span></div>
     </div>
 
+    <!-- 2. ATUR STOK -->
     <div class="card">
         <div class="card-header" style="color:#065f46;">⚙️ 2. Input Barang</div>
         <form id="f-produk" onsubmit="simpan(event)">
             <input type="text" id="i-nama" class="form-control" placeholder="Nama Barang" required>
             <input type="number" id="i-modal" class="form-control" placeholder="Harga Modal" required>
             <input type="number" id="i-harga" class="form-control" placeholder="Harga Jual" required>
-            <input type="number" id="i-stok" class="form-control" placeholder="Stok" required>
-            <button type="submit" class="btn btn-s">Simpan Masuk Gudang</button>
+            <input type="number" id="i-stok" class="form-control" placeholder="Stok Gudang" required>
+            <button type="submit" id="b-simpan" class="btn btn-s">Simpan Masuk Gudang</button>
         </form>
     </div>
 
+    <!-- 3. DETAIL STOK -->
     <div class="card">
-        <div class="card-header">📋 Daftar Stok</div>
+        <div class="card-header">📋 Master Daftar Stok Gudang</div>
         <table><thead><tr><th>Barang</th><th>Stok</th><th>Harga</th><th>Hapus</th></tr></thead><tbody id="t-gudang"></tbody></table>
-        <div style="display:flex; gap:10px; margin-top:10px;">
-            <button onclick="eksporData()" class="btn btn-p" style="background:#f59e0b; color:#000; font-size:11px;">📤 Salin Kode Data ke HP Lain</button>
-            <button onclick="imporData()" class="btn btn-p" style="background:#6b7280; color:#fff; font-size:11px;">📥 Tempel Kode dari HP Lain</button>
-        </div>
     </div>
 
+    <!-- 4. LAPORAN LABA -->
     <div class="card">
         <div class="card-header" style="color:#b91c1c;">📊 3. Laporan Laba Hari Ini</div>
         <div style="background:#10b981; color:#fff; padding:10px; border-radius:6px; text-align:center; margin-bottom:8px;">
@@ -57,107 +61,148 @@
 </div>
 
 <script>
+    // MENGHUBUNGKAN LANGSUNG KE CLOUD SUPABASE BARU ANDA
+    const url = "https://supabase.co";
+    const key = "sb_publishable_Nin3qClTUlwy_tVPxiS_0A_7ocelJKn";
+    const sb = supabase.createClient(url, key, { auth: { persistSession: false } });
+    
     let produk = [];
-    let riwayat = [];
 
     window.onload = () => { 
-        const d = new Date();
-        document.getElementById('filter-tanggal')?.value || `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        
-        produk = JSON.parse(localStorage.getItem('arfaaz_prod')) || [];
-        riwayat = JSON.parse(localStorage.getItem('arfaaz_riw')) || [];
-        refresh();
+        muatDataAwal(); 
+        aktifkanRealtimeCloud(); 
     };
 
-    function refresh() {
-        localStorage.setItem('arfaaz_prod', JSON.stringify(produk));
-        localStorage.setItem('arfaaz_riw', JSON.stringify(riwayat));
-        
-        const sel = document.getElementById('p-pilih');
-        const prev = sel.value;
+    // FUNGSI UTAMA MEMANGGIL DATA DARI DATABASE ONLINE
+    async function muatDataAwal() {
+        try {
+            const { data, error } = await sb.from('produk').select('*').order('created_at', { ascending: false });
+            if (!error && data) {
+                produk = data;
+                refreshTampilanTabel();
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    function refreshTampilanTabel() {
+        const sel = document.getElementById('p-pilih'); 
+        const prevValue = sel.value;
         sel.innerHTML = '<option value="">-- Pilih --</option>';
         
         const tg = document.getElementById('t-gudang'); 
         tg.innerHTML = '';
         
         produk.forEach(p => {
-            sel.innerHTML += `<option value="${p.id}">${p.nama}</option>`;
-            tg.innerHTML += `<tr><td><b>${p.nama}</b></td><td>${p.stok} Pcs</td><td>Rp${parseInt(p.harga).toLocaleString()}</td><td><button class="btn btn-d" style="padding:2px 6px; font-size:11px; width:auto;" onclick="hapus('${p.id}')">🗑️</button></td></tr>`;
+            sel.innerHTML += `<option value="${p.id}">${p.nama_barang}</option>`;
+            tg.innerHTML += `<tr><td><b>${p.nama_barang}</b></td><td><span class="badge" style="background:#6b7280;">${p.stok} Pcs</span></td><td>Rp${parseInt(p.harga_jual).toLocaleString()}</td><td><button class="btn btn-d" style="padding:2px 6px; font-size:11px; width:auto;" onclick="hapus('${p.id}')">🗑️</button></td></tr>`;
         });
         
-        sel.value = prev; 
+        sel.value = prevValue; 
         cek(); 
-        loadRiwayat();
+        muatRiwayatLaba();
     }
 
-    function loadRiwayat() {
-        const d = new Date();
-        const tgl = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        const tr = document.getElementById('t-riwayat'); 
-        tr.innerHTML = ''; 
-        let total = 0;
-        
-        const rFilter = riwayat.filter(r => r.tanggal === tgl);
-        if(rFilter.length === 0) {
-            tr.innerHTML = '<tr><td colspan="4" style="text-align:center;color:gray;">Belum ada penjualan harian</td></tr>';
-        } else {
-            rFilter.forEach(row => {
-                total += row.laba;
-                tr.innerHTML += `<tr><td><small>${row.jam}</small></td><td>${row.nama}</td><td>${row.qty}</td><td style="color:green; font-weight:bold;">+Rp${row.laba.toLocaleString()}</td></tr>`;
-            });
-        }
-        document.getElementById('lap-untung').innerText = "Rp" + total.toLocaleString();
+    async function muatRiwayatLaba() {
+        try {
+            const d = new Date();
+            const tgl = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            const { data } = await sb.from('riwayat_penjualan').select('*').eq('tanggal', tgl).order('id', { ascending: false });
+            
+            const tr = document.getElementById('t-riwayat'); 
+            tr.innerHTML = ''; 
+            let totalLaba = 0;
+            
+            if(data && data.length > 0) {
+                data.forEach(r => { 
+                    totalLaba += parseFloat(r.laba) || 0; 
+                    tr.innerHTML += `<tr><td><small style="color:gray;">${r.jam}</small></td><td><strong>${r.nama}</strong></td><td>${r.qty}</td><td style="color:green; font-weight:bold;">+Rp${parseInt(r.laba).toLocaleString()}</td></tr>`; 
+                });
+            } else {
+                tr.innerHTML = '<tr><td colspan="4" style="text-align:center;color:gray;">Belum ada penjualan harian</td></tr>';
+            }
+            document.getElementById('lap-untung').innerText = "Rp" + totalLaba.toLocaleString('id-ID');
+        } catch(e) {}
     }
 
-    function simpan(e) {
+    // FUNGSI INPUT BARANG BARU (LANGSUNG MELUNCUR KE CLOUD)
+    async function simpan(e) {
         e.preventDefault();
+        const btn = document.getElementById('b-simpan');
+        btn.innerText = "Menyimpan...";
+        btn.disabled = true;
+        
         const n = document.getElementById('i-nama').value;
         const m = parseInt(document.getElementById('i-modal').value) || 0;
         const h = parseInt(document.getElementById('i-harga').value) || 0;
         const s = parseInt(document.getElementById('i-stok').value) || 0;
         
-        produk.unshift({ id: Date.now().toString(), nama: n, modal: m, harga: h, stok: s });
-        document.getElementById('f-produk').reset();
-        refresh();
+        try {
+            const { error } = await sb.from('produk').insert([{ nama_barang: n, harga_modal: m, harga_jual: h, stok: s }]);
+            if (error) {
+                alert("Gagal menyimpan ke server: " + error.message);
+            } else {
+                document.getElementById('f-produk').reset();
+            }
+        } catch(err) {
+            alert("Kendala koneksi internet.");
+        }
+        
+        btn.innerText = "Simpan Masuk Gudang";
+        btn.disabled = false;
     }
 
-    function jual(e) {
+    // FUNGSI PROSES TRANSAKSI KASIR JUAL
+    async function jual(e) {
         e.preventDefault();
         const id = document.getElementById('p-pilih').value;
         const qty = parseInt(document.getElementById('p-qty').value);
-        if(!id) return;
+        const btn = document.getElementById('b-jual');
         
-        const p = produk.find(x => x.id === id);
-        if(!p || p.stok < qty) return alert("Stok kurang!");
+        if(!id) return alert("Pilih produk terlebih dahulu!");
+        const p = produk.find(x => x.id.toString() === id.toString());
+        if(!p || p.stok < qty) return alert("Stok di gudang tidak mencukupi!");
         
-        const laba = (p.harga - p.modal) * qty;
+        btn.innerText = "...";
+        btn.disabled = true;
+        
         const d = new Date();
         const jam = d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}).replace('.',':');
         const tgl = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const labaTotal = (p.harga_jual - p.harga_modal) * qty;
 
-        p.stok -= qty;
-        riwayat.unshift({ id: Date.now().toString(), nama: p.nama, qty, laba, tanggal: tgl, jam });
-        document.getElementById('p-qty').value = "1";
-        refresh();
-    }
-
-    function hapus(id) { if(confirm("Hapus?")) { produk = produk.filter(p => p.id !== id); refresh(); } }
-    function cek() { const id = document.getElementById('p-pilih').value, p = produk.find(x => x.id === id); document.getElementById('t-stok').innerText = p ? p.stok : 0; document.getElementById('t-harga').innerText = p ? "Rp" + p.harga.toLocaleString() : "Rp0"; }
-
-    function eksporData() {
-        const teks = btoa(JSON.stringify({ prod: produk, riw: riwayat }));
-        navigator.clipboard.writeText(teks);
-        alert("Kode data toko berhasil disalin! Silakan kirim lewat WA ke HP lain.");
-    }
-
-    function imporData() {
-        const kode = prompt("Tempel kode teks data toko dari WA di sini:");
-        if (kode) {
-            try {
-                const res = JSON.parse(atob(kode));
-                if (res.prod && res.riw) { produk = res.prod; riwayat = res.riw; refresh(); alert("Sukses diperbarui!"); }
-            } catch (e) { alert("Kode tidak valid!"); }
+        try {
+            // 1. Update pengurangan stok ke Cloud
+            await sb.from('produk').update({ stok: p.stok - qty }).eq('id', id);
+            // 2. Catat riwayat keuntungan ke Cloud
+            await sb.from('riwayat_penjualan').insert([{ produk_id: id.toString(), nama: p.nama_barang, qty: qty, laba: labaTotal, tanggal: tgl, jam: jam }]);
+            
+            document.getElementById('p-qty').value = "1";
+        } catch(e) {
+            alert("Transaksi gagal dikirim.");
         }
+        btn.innerText = "Jual";
+        btn.disabled = false;
+    }
+
+    async function hapus(id) { 
+        if(confirm("Apakah Anda yakin ingin menghapus barang ini?")) { 
+            await sb.from('produk').delete().eq('id', id); 
+        } 
+    }
+    
+    function cek() { 
+        const id = document.getElementById('p-pilih').value;
+        const p = produk.find(x => x.id.toString() === id.toString()); 
+        document.getElementById('t-stok').innerText = p ? p.stok : 0; 
+        document.getElementById('t-harga').innerText = p ? "Rp" + parseInt(p.harga_jual).toLocaleString() : "Rp0"; 
+    }
+
+    // INI RAHSIA UTAMA: SINKRONISASI SEKETIKA DI SEMUA LAYAR HP TANPA COPY-PASTE
+    function aktifkanRealtimeCloud() {
+        sb.channel('siaran-gudang')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'produk' }, () => muatDataAwal())
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'riwayat_penjualan' }, () => muatRiwayatLaba())
+          .subscribe();
     }
 </script>
 </body>
