@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kasir Sembako Kedai Arfaaz</title>
-    <!-- 1. MEMANGGIL LIBRARY FIREBASE (LEBIH STABIL DI HP) -->
-    <script src="https://gstatic.com"></script>
-    <script src="https://gstatic.com"></script>
+    <!-- PEMANGGILAN CORES LIBRARY SUPABASE OFFICIAL -->
+    <script src="https://jsdelivr.net"></script>
     <style>
         body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f3f4f6;margin:0;padding:12px;color:#1f2937;}
         .container{max-width:800px;margin:0 auto;} .text-center{text-align:center;} 
@@ -25,10 +24,10 @@
 <div class="container">
     <div class="text-center" style="margin-bottom:15px;">
         <h3 style="margin:5px 0 0 0;color:#1e3a8a;">🏪 KEDAI ARFAAZ</h3>
-        <p style="margin:2px 0;font-size:12px;color:#6b7280;">Sistem Kasir &amp; Stok Gudang Digital Mandiri (Realtime)</p>
+        <p style="margin:2px 0;font-size:12px;color:#6b7280;">Sistem Kasir &amp; Stok Gudang Digital Mandiri</p>
     </div>
     
-    <!-- KASIR TRANSAKSI -->
+    <!-- 1. KASIR TRANSAKSI -->
     <div class="card" style="background:#eff6ff;border-left:4px solid #2563eb;">
         <div class="card-header">🛒 1. Menu Kasir Jualan</div>
         <form onsubmit="keKeranjang(event)">
@@ -41,7 +40,7 @@
         <div style="font-size:12px;font-weight:bold;color:#1e40af;">Stok Gudang: <span id="t-stok" class="badge" style="background:#f59e0b;color:#000;">0</span> | Harga Jual: <span id="t-harga" class="badge" style="background:#f3f4f6;color:#1e3a8a;">Rp0</span></div>
     </div>
     
-    <!-- ATUR STOK -->
+    <!-- 2. ATUR STOK -->
     <div class="card">
         <div class="card-header" style="color:#065f46;">⚙️ 2. Input / Edit Produk Baru</div>
         <form id="f-produk" onsubmit="saveBarang(event)">
@@ -53,65 +52,64 @@
         </form>
     </div>
     
-    <!-- DETAIL STOK -->
+    <!-- 3. DETAIL STOK & TRANSAKSI -->
     <div class="card">
-        <div class="card-header" style="color:#4b5563;">📋 Master Daftar Stok Sembako Gudang</div>
+        <div class="card-header" style="color:#4b5563;">📋 Master Daftar Stok Sembako Gudang <button onclick="ambilSemuaData()" style="float:right;background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:bold;cursor:pointer;">🔄 Tarik Data Terbaru</button></div>
         <div style="overflow-x:auto;"><table><thead><tr><th>Nama Barang</th><th>Stok</th><th>Harga</th><th>Hapus</th></tr></thead><tbody id="t-gudang"></tbody></table></div>
     </div>
     
-    <!-- LAPORAN -->
     <div class="card">
         <div class="card-header" style="color:#b91c1c;">📊 3. Laporan Keuntungan &amp; Riwayat Harian</div>
-        <div class="form-group"><input type="date" id="filter-tanggal" class="form-control" onchange="loadRiwayatRealtime()"></div>
+        <div class="form-group"><input type="date" id="filter-tanggal" class="form-control" onchange="loadRiwayat()"></div>
         <div class="badge-card" style="background:#10b981;"><h6>📈 Total Keuntungan Bersih (Laba)</h6><h4 id="lap-untung" style="margin:5px 0 0 0;">Rp0</h4></div>
         <div style="overflow-x:auto;"><table><thead><tr><th>Waktu</th><th>Nama Barang</th><th>Qty</th><th>Keuntungan</th></tr></thead><tbody id="t-riwayat"></tbody></table></div>
     </div>
 </div>
 
 <script>
-    // 2. KONFIGURASI DATABASE PUBLIC FIREBASE (SIAP PAKAI TANPA LOGIN)
-    const firebaseConfig = {
-        apiKey: "AIzaSyAsD-ContohKeyPublicArfaaz2026",
-        authDomain: "://firebaseapp.com",
-        projectId: "mubhbbiiauzbqnnrawbd" // Menggunakan ID proyek Anda
-    };
+    // MENGGUNAKAN ALAMAT URL & KEY ASLI MILIK PROYEK KASIR-GROSIR ANDA
+    const SUPABASE_URL = "https://supabase.co";
+    const SUPABASE_KEY = "sb_publishable_vs-g2Pd_IFL5X8PVrApqTw_KdQTTAj0";
     
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: { persistSession: false }
+    });
 
     let listProduk = [];
 
     window.onload = function() { 
         const d = new Date();
-        const tgl = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        document.getElementById('filter-tanggal').value = tgl;
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        document.getElementById('filter-tanggal').value = `${yyyy}-${mm}-${dd}`;
         
-        aktifkanSistemRealtime();
+        ambilSemuaData();
     };
 
-    // 3. SINKRONISASI REALTIME OTOMATIS DAN ANTI MACET
-    function aktifkanSistemRealtime() {
-        // Mendengarkan perubahan data stok produk secara otomatis antar-HP
-        db.collection("produk").orderBy("created_at", "desc").onSnapshot((snapshot) => {
-            listProduk = [];
-            snapshot.forEach((doc) => {
-                let data = doc.data();
-                data.id = doc.id;
-                listProduk.push(data);
-            });
-            refreshTampilan();
-        }, (error) => {
-            alert("Kendala koneksi database: " + error.message);
-        });
+    // FUNGSI UTAMA AMBIL DATA YANG DIJAMIN CEPAT & RINGAN
+    async function ambilSemuaData() {
+        try {
+            const { data: dataProd, error: errProd } = await supabaseClient
+                .from('produk')
+                .select('*');
 
-        loadRiwayatRealtime();
+            if (!errProd) {
+                listProduk = dataProd || [];
+                refreshTampilan();
+            } else {
+                console.error("Gagal sinkron data:", errProd.message);
+            }
+        } catch (e) {
+            console.error("Koneksi internet bermasalah:", e);
+        }
     }
 
     function refreshTampilan() {
         const sel = document.getElementById('p-pilih'); 
-        const nilaiSebelumnya = sel.value;
-        sel.innerHTML = '<option value="">-- Pilih Produk --</option>';
+        const nilaiSebelumnya = sel.value; 
         
+        sel.innerHTML = '<option value="">-- Pilih Produk --</option>';
         const tb = document.getElementById('t-gudang'); 
         tb.innerHTML = '';
         
@@ -119,72 +117,73 @@
             sel.innerHTML += `<option value="${p.id}">${p.nama_barang}</option>`;
             tb.innerHTML += `<tr><td><strong>${p.nama_barang}</strong></td><td><span class="badge">${p.stok} Pcs</span></td><td>Rp${parseInt(p.harga_jual).toLocaleString('id-ID')}</td><td><button class="btn btn-danger" style="padding:2px 6px;font-size:11px;" onclick="hapusBarang('${p.id}')">🗑️</button></td></tr>`;
         });
-        sel.value = nilaiSebelumnya; 
-        cekHarga();
-    }
-
-    function loadRiwayatRealtime() {
-        const tgl = document.getElementById('filter-tanggal').value;
         
-        db.collection("riwayat_penjualan").where("tanggal", "==", tgl).onSnapshot((snapshot) => {
-            const tbR = document.getElementById('t-riwayat'); 
-            tbR.innerHTML = ''; 
-            let labaTotal = 0;
-            
-            if (snapshot.empty) {
-                tbR.innerHTML = '<tr><td colspan="4" style="text-align:center;color:gray;">Belum ada penjualan hari ini</td></tr>';
-            } else {
-                snapshot.forEach((doc) => {
-                    let row = doc.data();
-                    labaTotal += parseFloat(row.laba) || 0;
-                    tbR.innerHTML += `<tr><td><small style="color:gray;">${row.jam}</small></td><td><strong>${row.nama}</strong></td><td>${row.qty}</td><td style="color:green;font-weight:bold;">+Rp${parseInt(row.laba).toLocaleString('id-ID')}</td></tr>`;
-                });
-            }
-            document.getElementById('lap-untung').innerText = "Rp" + labaTotal.toLocaleString('id-ID');
-        });
+        sel.value = nilaiSebelumnya;
+        cekHarga(); 
+        loadRiwayat();
     }
 
-    // 4. FUNGSI SIMPAN BARANG YANG PASTI BERHASIL (OTOMATIS MEMBUAT TABEL)
-    async function saveBarang(e) {
-        e.preventDefault(); 
-        const btn = document.getElementById('btn-save'); 
-        btn.innerText = "Menyimpan..."; 
-        btn.disabled = true;
-
-        const nama = document.getElementById('i-nama').value;
-        const modal = parseInt(document.getElementById('i-modal').value) || 0;
-        const harga = parseInt(document.getElementById('i-harga').value) || 0;
-        const stok = parseInt(document.getElementById('i-stok').value) || 0;
+    async function loadRiwayat() {
+        const tgl = document.getElementById('filter-tanggal').value; 
+        const tbR = document.getElementById('t-riwayat'); 
+        tbR.innerHTML = ''; 
+        let labaTotal = 0;
 
         try {
-            await db.collection("produk").add({
-                nama_barang: nama,
-                harga_modal: modal,
-                harga_jual: harga,
-                stok: stok,
-                created_at: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            document.getElementById('f-produk').reset();
-        } catch (err) {
-            alert("Gagal menyimpan: " + err.message);
+            const { data: riwayatFilter, error } = await supabaseClient
+                .from('riwayat_penjualan')
+                .select('*')
+                .eq('tanggal', tgl);
+
+            if(error || !riwayatFilter || riwayatFilter.length === 0) { 
+                tbR.innerHTML = '<tr><td colspan="4" style="text-align:center;color:gray;">Belum ada penjualan hari ini</td></tr>'; 
+            } else { 
+                riwayatFilter.forEach(row => { 
+                    labaTotal += parseFloat(row.laba); 
+                    tbR.innerHTML += `<tr><td><small style="color:gray;">${row.jam}</small></td><td><strong>${row.nama}</strong></td><td>${row.qty}</td><td style="color:green;font-weight:bold;">+Rp${parseInt(row.laba).toLocaleString('id-ID')}</td></tr>`; 
+                }); 
+            } 
+        } catch (e) {
+            tbR.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Gagal memuat riwayat</td></tr>';
         }
+        document.getElementById('lap-untung').innerText = "Rp" + labaTotal.toLocaleString('id-ID');
+    }
+
+    // FUNGSI SIMPAN BARANG DENGAN SANGAT STABIL (ANTI-LAG)
+    async function saveBarang(e) {
+        e.preventDefault(); 
+        const btnSave = document.getElementById('btn-save');
         
-        btn.innerText = "Simpan Masuk Gudang"; 
-        btn.disabled = false;
+        btnSave.innerText = "Menyimpan...";
+        btnSave.disabled = true;
+
+        const namaValue = document.getElementById('i-nama').value; 
+        const modalValue = parseInt(document.getElementById('i-modal').value) || 0; 
+        const hargaValue = parseInt(document.getElementById('i-harga').value) || 0; 
+        const stokValue = parseInt(document.getElementById('i-stok').value) || 0;
+
+        try {
+            const { error } = await supabaseClient
+                .from('produk')
+                .insert([{ 
+                    nama_barang: namaValue, 
+                    harga_modal: modalValue, 
+                    harga_jual: hargaValue, 
+                    stok: stokValue 
+                }]);
+
+            if (error) {
+                alert("Gagal simpan ke server cloud. Pesan kesalahan: " + error.message);
+            } else {
+                document.getElementById('f-produk').reset();
+                await ambilSemuaData(); // Paksa sinkronisasi instan setelah tersimpan
+            }
+        } catch (err) {
+            alert("Terjadi kendala pengiriman data: " + err.message);
+        }
+
+        btnSave.innerText = "Simpan Masuk Gudang";
+        btnSave.disabled = false;
     }
 
-    async function hapusBarang(id) { 
-        if(confirm("Hapus barang ini dari gudang?")) { 
-            await db.collection("produk").doc(id).delete(); 
-        } 
-    }
-
-    function cekHarga() { 
-        const id = document.getElementById('p-pilih').value; 
-        const p = listProduk.find(x => x.id === id);
-        document.getElementById('t-stok').innerText = p ? p.stok : 0; 
-        document.getElementById('t-harga').innerText = p ? "Rp" + parseInt(p.harga_jual).toLocaleString('id-ID') : "Rp0";
-    }
-
-    async function keKeranjang(e) {
-        e.preventDefault();
+    async function hapusBarang(id) {
