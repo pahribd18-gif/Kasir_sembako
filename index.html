@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kasir Sembako Kedai Arfaaz</title>
-    <!-- 1. MEMANGGIL LIBRARY SUPABASE DENGAN BENAR -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- MENGHUBUNGKAN LIBRARY SUPABASE VIA CDN -->
+    <script src="https://jsdelivr.net"></script>
     <style>
         body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f3f4f6;margin:0;padding:12px;color:#1f2937;}
         .container{max-width:800px;margin:0 auto;} .text-center{text-align:center;} .fw-bold{font-weight:bold;}
@@ -69,23 +69,26 @@
 </div>
 
 <script>
-    // DATA KUNCI SUPABASE ASLI MILIK KEDAI ARFAAZ
-    const SUPABASE_URL = "https://mubhbbiiauzbqnnrawbd.supabase.co";
+    const SUPABASE_URL = "https://supabase.co";
     const SUPABASE_KEY = "sb_publishable_vs-g2Pd_IFL5X8PVrApqTw_KdQTTAj0";
     
-    // PERBAIKAN: Menggunakan inisialisasi objek global langsung (tanpa window.)
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // PERBAIKAN: Menambahkan opsi tambahan untuk mematikan pelacakan sesi login (bypass pengunci jaringan)
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false
+        }
+    });
 
     let listProduk = [];
 
     window.onload = function() { 
-        // Mengeset format tanggal awal dengan string bersih YYYY-MM-DD
         document.getElementById('filter-tanggal').value = new Date().toISOString().split('T')[0]; 
         ambilSemuaData();
         aktifkanSistemRealtime();
     };
 
-    // MENGAMBIL DATA PRODUK DARI CLOUD SUPABASE
     async function ambilSemuaData() {
         try {
             const { data: dataProd, error: errProd } = await supabaseClient
@@ -104,7 +107,6 @@
         }
     }
 
-    // MEMPERBARUI TAMPILAN TABEL STOK DAN DROPDOWN KASIR
     function refreshTampilan() {
         const sel = document.getElementById('p-pilih'); 
         const nilaiSebelumnya = sel.value; 
@@ -123,7 +125,6 @@
         loadRiwayat();
     }
 
-    // MENGAMBIL LAPORAN KEUNTUNGAN DAN RIWAYAT BERDASARKAN TANGGAL
     async function loadRiwayat() {
         const tgl = document.getElementById('filter-tanggal').value; 
         const tbR = document.getElementById('t-riwayat'); 
@@ -151,7 +152,6 @@
         document.getElementById('lap-untung').innerText = "Rp" + labaTotal.toLocaleString('id-ID');
     }
 
-    // SIMPAN PRODUK BARU KE DATABASE CLOUD
     async function saveBarang(e) {
         e.preventDefault(); 
         const btnSave = document.getElementById('btn-save');
@@ -179,8 +179,14 @@
         }
     }
 
-    // HAPUS PRODUK DARI DATABASE CLOUD
     async function hapusBarang(id) { 
         if(confirm("Apakah Anda yakin ingin menghapus barang ini?")) { 
             const { error } = await supabaseClient.from('produk').delete().eq('id', id);
             if (error) alert("Gagal menghapus data: " + error.message);
+            else ambilSemuaData();
+        } 
+    }
+
+    function cekHarga() { 
+        const id = document.getElementById('p-pilih').value; 
+        const p = listProduk.find(x => x.id.toString() === id.toString());
