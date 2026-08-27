@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kasir Sembako Kedai Arfaaz</title>
-    <!-- PEMANGGILAN LIBRARY SUPABASE RESMI VIA CDN -->
+    <!-- PEMANGGILAN UTAMA LIBRARY CLOUD SUPABASE -->
     <script src="https://jsdelivr.net"></script>
     <style>
         body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f3f4f6;margin:0;padding:12px;color:#1f2937;}
@@ -70,14 +70,21 @@
     const SUPABASE_URL = "https://supabase.co";
     const SUPABASE_KEY = "sb_publishable_vs-g2Pd_IFL5X8PVrApqTw_KdQTTAj0";
     
+    // INTEGRASI VERCEL BYPASS HEADERS
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-        auth: { persistSession: false }
+        auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false
+        },
+        global: {
+            headers: { 'X-Client-Info': 'supabase-js' }
+        }
     });
 
     let listProduk = [];
 
     window.onload = function() { 
-        // Menggunakan format tanggal standar teks murni agar disetujui server cloud
         const d = new Date();
         const yyyy = d.getFullYear();
         const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -161,3 +168,31 @@
 
     async function keKeranjang(e) {
         e.preventDefault(); const id = document.getElementById('p-pilih').value; const qty = parseInt(document.getElementById('p-qty').value); const btnJual = document.getElementById('btn-jual');
+        if(!id) return alert("Pilih produk dulu!"); 
+        const p = listProduk.find(x => x.id.toString() === id.toString()); 
+        if(!p || p.stok < qty) return alert("Stok gudang tidak mencukupi!");
+        
+        btnJual.innerText = "..."; 
+        btnJual.disabled = true;
+        
+        const d = new Date(); 
+        const jamSekarang = d.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}).replace('.', ':');
+        const tglSekarang = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; 
+
+        const { error: errUpdate } = await supabaseClient.from('produk').update({ stok: p.stok - qty }).eq('id', id);
+        if(!errUpdate) {
+            await supabaseClient.from('riwayat_penjualan').insert([{ produk_id: id.toString(), nama: p.nama_barang, qty: qty, laba: (p.harga_jual - p.harga_modal) * qty, tanggal: tglSekarang, jam: jamSekarang }]);
+            document.getElementById('p-qty').value = "1"; 
+            document.getElementById('p-pilih').value = ""; 
+            ambilSemuaData();
+        }
+        btnJual.innerText = "Jual"; 
+        btnJual.disabled = false;
+    }
+
+    function aktifkanSistemRealtime() {
+        supabaseClient.channel('realtime-kedai').on('postgres_changes', { event: '*', schema: 'public', table: 'produk' }, () => { ambilSemuaData(); }).on('postgres_changes', { event: '*', schema: 'public', table: 'riwayat_penjualan' }, () => { loadRiwayat(); }).subscribe();
+    }
+</script>
+</body>
+</html>
