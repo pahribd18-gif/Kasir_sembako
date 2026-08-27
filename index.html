@@ -2,9 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Kedai Arfaaz</title>
-    <!-- PEMANGGILAN CORES LIBRARY SUPABASE OFFICIAL -->
-    <script src="https://jsdelivr.net"></script>
+    <title>Kasir Sembako Kedai Arfaaz</title>
     <style>
         body{font-family:sans-serif; background:#f3f4f6; padding:12px; color:#1f2937;}
         .card{background:#fff; border-radius:8px; padding:12px; margin-bottom:12px; box-shadow:0 2px 4px rgba(0,0,0,0.05);}
@@ -24,7 +22,7 @@
         <form onsubmit="jual(event)">
             <select id="p-pilih" class="form-control" onchange="cek()" required></select>
             <input type="number" id="p-qty" class="form-control" min="1" value="1">
-            <button type="submit" id="b-jual" class="btn btn-p">Jual</button>
+            <button type="submit" class="btn btn-p">Jual</button>
         </form>
         <div style="font-size:12px; margin-top:5px;">Stok: <span id="t-stok">0</span> | Harga: <span id="t-harga">Rp0</span></div>
     </div>
@@ -36,13 +34,17 @@
             <input type="number" id="i-modal" class="form-control" placeholder="Harga Modal" required>
             <input type="number" id="i-harga" class="form-control" placeholder="Harga Jual" required>
             <input type="number" id="i-stok" class="form-control" placeholder="Stok" required>
-            <button type="submit" id="b-simpan" class="btn btn-s">Simpan Masuk Gudang</button>
+            <button type="submit" class="btn btn-s">Simpan Masuk Gudang</button>
         </form>
     </div>
 
     <div class="card">
         <div class="card-header">📋 Daftar Stok</div>
-        <table><thead><tr><th>Barang</th><th>Stok</th><th>Harga</th><th>Aksi</th></tr></thead><tbody id="t-gudang"></tbody></table>
+        <table><thead><tr><th>Barang</th><th>Stok</th><th>Harga</th><th>Hapus</th></tr></thead><tbody id="t-gudang"></tbody></table>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+            <button onclick="eksporData()" class="btn btn-p" style="background:#f59e0b; color:#000; font-size:11px;">📤 Salin Kode Data ke HP Lain</button>
+            <button onclick="imporData()" class="btn btn-p" style="background:#6b7280; color:#fff; font-size:11px;">📥 Tempel Kode dari HP Lain</button>
+        </div>
     </div>
 
     <div class="card">
@@ -55,123 +57,108 @@
 </div>
 
 <script>
-    const url = "https://supabase.co";
-    const key = "sb_publishable_Nin3qClTUlwy_tVPxiS_0A_7ocelJKn";
-    const sb = supabase.createClient(url, key, { auth: { persistSession: false } });
-    
     let produk = [];
-    let dataRiwayat = [];
+    let riwayat = [];
 
     window.onload = () => { 
+        const d = new Date();
+        document.getElementById('filter-tanggal')?.value || `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        
         produk = JSON.parse(localStorage.getItem('arfaaz_prod')) || [];
-        dataRiwayat = JSON.parse(localStorage.getItem('arfaaz_riw')) || [];
-        tampilkanData();
-        muatDariCloud(); 
-        rtime();
+        riwayat = JSON.parse(localStorage.getItem('arfaaz_riw')) || [];
+        refresh();
     };
 
-    async function muatDariCloud() {
-        try {
-            const { data, error } = await sb.from('produk').select('*').order('created_at', { ascending: false });
-            if (!error && data) {
-                produk = data;
-                localStorage.setItem('arfaaz_prod', JSON.stringify(produk));
-                tampilkanData();
-            }
-            
-            const tgl = new Date().toISOString().split('T')[0];
-            const { data: riwData } = await sb.from('riwayat_penjualan').select('*').eq('tanggal', tgl).order('id', { ascending: false });
-            if (riwData) {
-                dataRiwayat = riwData;
-                localStorage.setItem('arfaaz_riw', JSON.stringify(dataRiwayat));
-                tampilkanRiwayat();
-            }
-        } catch(e) {}
-    }
-
-    function tampilkanData() {
-        const sel = document.getElementById('p-pilih'); const nilaiSebelumnya = sel.value;
+    function refresh() {
+        localStorage.setItem('arfaaz_prod', JSON.stringify(produk));
+        localStorage.setItem('arfaaz_riw', JSON.stringify(riwayat));
+        
+        const sel = document.getElementById('p-pilih');
+        const prev = sel.value;
         sel.innerHTML = '<option value="">-- Pilih --</option>';
-        const tg = document.getElementById('t-gudang'); tg.innerHTML = '';
+        
+        const tg = document.getElementById('t-gudang'); 
+        tg.innerHTML = '';
         
         produk.forEach(p => {
-            sel.innerHTML += `<option value="${p.id}">${p.nama_barang}</option>`;
-            tg.innerHTML += `<tr><td><b>${p.nama_barang}</b></td><td>${p.stok} Pcs</td><td>Rp${parseInt(p.harga_jual).toLocaleString()}</td><td><button class="btn btn-d" style="padding:2px 6px; font-size:11px; width:auto;" onclick="hapus('${p.id}')">🗑️</button></td></tr>`;
+            sel.innerHTML += `<option value="${p.id}">${p.nama}</option>`;
+            tg.innerHTML += `<tr><td><b>${p.nama}</b></td><td>${p.stok} Pcs</td><td>Rp${parseInt(p.harga).toLocaleString()}</td><td><button class="btn btn-d" style="padding:2px 6px; font-size:11px; width:auto;" onclick="hapus('${p.id}')">🗑️</button></td></tr>`;
         });
-        sel.value = nilaiSebelumnya; cek(); tampilkanRiwayat();
+        
+        sel.value = prev; 
+        cek(); 
+        loadRiwayat();
     }
 
-    function tampilkanRiwayat() {
-        const tr = document.getElementById('t-riwayat'); tr.innerHTML = ''; let total = 0;
-        dataRiwayat.forEach(r => { 
-            total += parseFloat(r.laba) || 0; 
-            tr.innerHTML += `<tr><td><small>${r.jam}</small></td><td>${r.nama}</td><td>${r.qty}</td><td style="color:green; font-weight:bold;">+Rp${parseInt(r.laba).toLocaleString()}</td></tr>`; 
-        });
+    function loadRiwayat() {
+        const d = new Date();
+        const tgl = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const tr = document.getElementById('t-riwayat'); 
+        tr.innerHTML = ''; 
+        let total = 0;
+        
+        const rFilter = riwayat.filter(r => r.tanggal === tgl);
+        if(rFilter.length === 0) {
+            tr.innerHTML = '<tr><td colspan="4" style="text-align:center;color:gray;">Belum ada penjualan harian</td></tr>';
+        } else {
+            rFilter.forEach(row => {
+                total += row.laba;
+                tr.innerHTML += `<tr><td><small>${row.jam}</small></td><td>${row.nama}</td><td>${row.qty}</td><td style="color:green; font-weight:bold;">+Rp${row.laba.toLocaleString()}</td></tr>`;
+            });
+        }
         document.getElementById('lap-untung').innerText = "Rp" + total.toLocaleString();
     }
 
-    async function simpan(e) {
+    function simpan(e) {
         e.preventDefault();
-        const btn = document.getElementById('b-simpan');
-        btn.innerText = "Menyimpan...";
-        btn.disabled = true;
-        
         const n = document.getElementById('i-nama').value;
         const m = parseInt(document.getElementById('i-modal').value) || 0;
         const h = parseInt(document.getElementById('i-harga').value) || 0;
         const s = parseInt(document.getElementById('i-stok').value) || 0;
         
-        const barangBaru = { id: "lokal_" + Date.now(), nama_barang: n, harga_modal: m, harga_jual: h, stok: s };
-        produk.unshift(barangBaru);
-        localStorage.setItem('arfaaz_prod', JSON.stringify(produk));
-        tampilkanData();
-        
+        produk.unshift({ id: Date.now().toString(), nama: n, modal: m, harga: h, stok: s });
         document.getElementById('f-produk').reset();
-        btn.innerText = "Simpan Masuk Gudang";
-        btn.disabled = false;
-
-        try {
-            await sb.from('produk').insert([{ nama_barang: n, harga_modal: m, harga_jual: h, stok: s }]);
-            muatDariCloud();
-        } catch(err) {}
+        refresh();
     }
 
-    // FIX UTAMA: Menyelaraskan nama fungsi menjadi jual(e) agar cocok dengan pemanggilan form HTML
-    async function jual(e) {
-        e.preventDefault(); const id = document.getElementById('p-pilih').value, qty = parseInt(document.getElementById('p-qty').value);
-        if(!id) return; const p = produk.find(x => x.id.toString() === id.toString()); if(!p || p.stok < qty) return alert("Stok kurang!");
-        document.getElementById('b-jual').disabled = true;
+    function jual(e) {
+        e.preventDefault();
+        const id = document.getElementById('p-pilih').value;
+        const qty = parseInt(document.getElementById('p-qty').value);
+        if(!id) return;
         
-        const d = new Date(), jam = d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}).replace('.',':'), tgl = d.toISOString().split('T')[0];
-        const labaTotal = (p.harga_jual - p.harga_modal) * qty;
+        const p = produk.find(x => x.id === id);
+        if(!p || p.stok < qty) return alert("Stok kurang!");
+        
+        const laba = (p.harga - p.modal) * qty;
+        const d = new Date();
+        const jam = d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}).replace('.',':');
+        const tgl = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
         p.stok -= qty;
-        dataRiwayat.unshift({ id: Date.now(), nama: p.nama_barang, qty: qty, laba: labaTotal, jam: jam, tanggal: tgl });
-        
-        localStorage.setItem('arfaaz_prod', JSON.stringify(produk));
-        localStorage.setItem('arfaaz_riw', JSON.stringify(dataRiwayat));
-        
-        document.getElementById('p-qty').value = "1"; tampilkanData();
-        document.getElementById('b-jual').disabled = false;
-
-        try {
-            await sb.from('produk').update({ stok: p.stok }).eq('id', id);
-            await sb.from('riwayat_penjualan').insert([{ produk_id: id.toString(), nama: p.nama_barang, qty: qty, laba: labaTotal, tanggal: tgl, jam: jam }]);
-            muatDariCloud();
-        } catch(e) {}
+        riwayat.unshift({ id: Date.now().toString(), nama: p.nama, qty, laba, tanggal: tgl, jam });
+        document.getElementById('p-qty').value = "1";
+        refresh();
     }
 
-    async function hapus(id) { 
-        if(confirm("Hapus?")) { 
-            produk = produk.filter(p => p.id !== id); 
-            localStorage.setItem('arfaaz_prod', JSON.stringify(produk));
-            tampilkanData();
-            try { await sb.from('produk').delete().eq('id', id); muatDariCloud(); } catch(e){}
-        } 
+    function hapus(id) { if(confirm("Hapus?")) { produk = produk.filter(p => p.id !== id); refresh(); } }
+    function cek() { const id = document.getElementById('p-pilih').value, p = produk.find(x => x.id === id); document.getElementById('t-stok').innerText = p ? p.stok : 0; document.getElementById('t-harga').innerText = p ? "Rp" + p.harga.toLocaleString() : "Rp0"; }
+
+    function eksporData() {
+        const teks = btoa(JSON.stringify({ prod: produk, riw: riwayat }));
+        navigator.clipboard.writeText(teks);
+        alert("Kode data toko berhasil disalin! Silakan kirim lewat WA ke HP lain.");
     }
-    
-    function cek() { const id = document.getElementById('p-pilih').value, p = produk.find(x => x.id.toString() === id.toString()); document.getElementById('t-stok').innerText = p ? p.stok : 0; document.getElementById('t-harga').innerText = p ? "Rp" + parseInt(p.harga_jual).toLocaleString() : "Rp0"; }
-    function rtime() { sb.channel('kedai').on('postgres_changes', { event: '*', schema: 'public', table: 'produk' }, () => muatDariCloud()).on('postgres_changes', { event: '*', schema: 'public', table: 'riwayat_penjualan' }, () => muatDariCloud()).subscribe(); }
+
+    function imporData() {
+        const kode = prompt("Tempel kode teks data toko dari WA di sini:");
+        if (kode) {
+            try {
+                const res = JSON.parse(atob(kode));
+                if (res.prod && res.riw) { produk = res.prod; riwayat = res.riw; refresh(); alert("Sukses diperbarui!"); }
+            } catch (e) { alert("Kode tidak valid!"); }
+        }
+    }
 </script>
 </body>
 </html>
