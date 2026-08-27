@@ -69,7 +69,7 @@
 </div>
 
 <script>
-    // KUNCI AKSES UTK DATABASES SUPABASE KEDAI ARFAAZ
+    // DATA KUNCI SUPABASE ASLI MILIK KEDAI ARFAAZ
     const SUPABASE_URL = "https://supabase.co";
     const SUPABASE_KEY = "sb_publishable_vs-g2Pd_IFL5X8PVrApqTw_KdQTTAj0";
     
@@ -78,13 +78,13 @@
     let listProduk = [];
 
     window.onload = function() { 
-        // PERBAIKAN: .split('T')[0] untuk mengambil format tanggal YYYY-MM-DD string bersih
+        // SUDAH DIPERBAIKI: Menggunakan [0] agar menghasilkan teks string tanggal murni 'YYYY-MM-DD'
         document.getElementById('filter-tanggal').value = new Date().toISOString().split('T')[0]; 
         ambilSemuaData();
         aktifkanSistemRealtime();
     };
 
-    // FUNGSI UNTUK MENGAMBIL DATA PRODUK DARI CLOUD
+    // MENGAMBIL DATA PRODUK DARI CLOUD SUPABASE
     async function ambilSemuaData() {
         const { data: dataProd, error: errProd } = await supabaseClient
             .from('produk')
@@ -100,6 +100,7 @@
         refreshTampilan();
     }
 
+    // MEMPERBARUI TAMPILAN TABEL STOK DAN DROPDOWN KASIR
     function refreshTampilan() {
         const sel = document.getElementById('p-pilih'); 
         const nilaiSebelumnya = sel.value; 
@@ -118,7 +119,7 @@
         loadRiwayat();
     }
 
-    // FUNGSI UNTUK MENGAMBIL LAPORAN KEUNTUNGAN DAN RIWAYAT DARI CLOUD
+    // MENGAMBIL LAPORAN KEUNTUNGAN DAN RIWAYAT BERDASARKAN TANGGAL
     async function loadRiwayat() {
         const tgl = document.getElementById('filter-tanggal').value; 
         const tbR = document.getElementById('t-riwayat'); 
@@ -142,12 +143,11 @@
         document.getElementById('lap-untung').innerText = "Rp" + labaTotal.toLocaleString('id-ID');
     }
 
-    // SIMPAN PRODUK BARU KE CLOUD
+    // SIMPAN PRODUK BARU KE DATABASE CLOUD
     async function saveBarang(e) {
         e.preventDefault(); 
         const btnSave = document.getElementById('btn-save');
         
-        // Ubah tombol jadi loading
         btnSave.innerText = "Menyimpan...";
         btnSave.disabled = true;
 
@@ -160,19 +160,18 @@
             .from('produk')
             .insert([{ nama_barang: nama, harga_modal: modal, harga_jual: harga, stok: dtStok }]);
 
-        // Kembalikan status tombol setelah proses selesai
         btnSave.innerText = "Simpan Masuk Gudang";
         btnSave.disabled = false;
 
         if (error) {
-            alert("Gagal simpan barang: " + error.message);
+            alert("Gagal simpan barang: " + error.message + "\n\nCatatan: Pastikan RLS di Supabase sudah dimatikan!");
         } else {
             document.getElementById('f-produk').reset();
             ambilSemuaData();
         }
     }
 
-    // HAPUS PRODUK DARI CLOUD
+    // HAPUS PRODUK DARI DATABASE CLOUD
     async function hapusBarang(id) { 
         if(confirm("Hapus barang?")) { 
             const { error } = await supabaseClient.from('produk').delete().eq('id', id);
@@ -181,9 +180,8 @@
         } 
     }
 
+    // CEK HARGA DAN STOK SAAT KASIR MEMILIH BARANG
     function cekHarga() { 
         const id = document.getElementById('p-pilih').value; 
         const p = listProduk.find(x => x.id.toString() === id.toString()); 
-        document.getElementById('t-stok').innerText = p ? p.stok : 0; 
-        document.getElementById('t-harga').innerText = p ? "Rp" + parseInt(p.harga_jual).toLocaleString('id-ID') : "Rp0"; 
-    }
+        document.getElementById('t-stok').innerText = p ? p.stok : 0;
