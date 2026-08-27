@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kasir Sembako Kedai Arfaaz</title>
-    <!-- MENGHUBUNGKAN LIBRARY SUPABASE VIA CDN -->
+    <!-- KONEKSI LIBRARY SUPABASE -->
     <script src="https://jsdelivr.net"></script>
     <style>
         body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f3f4f6;margin:0;padding:12px;color:#1f2937;}
@@ -69,7 +69,8 @@
 </div>
 
 <script>
-    const SUPABASE_URL = "https://supabase.co";
+    // FIX UTAMA: Alamat URL dibersihkan dari akhiran /rest/v1/ agar koneksi tidak rusak
+    const SUPABASE_URL = "https://mubhbbiiauzbqnnrawbd.supabase.co";
     const SUPABASE_KEY = "sb_publishable_vs-g2Pd_IFL5X8PVrApqTw_KdQTTAj0";
     
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
@@ -191,5 +192,3 @@
             else ambilSemuaData();
         } 
     }
-
-    function cekHarga() {
